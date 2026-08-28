@@ -113,7 +113,7 @@
 
 .fw-crm-eb-item__icon {
 	display: inline-flex;
-	color: #2271b1;
+	color: var(--fw-accent, #2271b1);
 }
 
 .fw-crm-eb-item__title {
@@ -134,7 +134,7 @@
 }
 
 .fw-crm-eb-item__actions a:hover {
-	color: #135e96;
+	color: var(--fw-accent-hover, #135e96);
 }
 
 .fw-crm-eb-item__preview {

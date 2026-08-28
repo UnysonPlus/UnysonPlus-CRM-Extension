@@ -58,7 +58,7 @@
 .fw-ext-newsletter-crm .fw-crm-status--sending,
 .fw-ext-newsletter-crm .fw-crm-status--scheduled {
 	background: #e5f1fb;
-	color: #135e96;
+	color: var(--fw-accent-hover, #135e96);
 }
 
 .fw-ext-newsletter-crm .fw-crm-status--paused {
@@ -122,7 +122,7 @@
 	padding: 1em 1.2em .4em;
 	background: #fff;
 	border: 1px solid #c3c4c7;
-	border-left: 4px solid #2271b1;
+	border-left: 4px solid var(--fw-accent, #2271b1);
 	box-shadow: 0 1px 1px rgba( 0, 0, 0, .04 );
 }
 
@@ -200,7 +200,7 @@
 	padding: .7em 1em;
 	background: #fff;
 	border: 1px solid #c3c4c7;
-	border-left: 4px solid #2271b1;
+	border-left: 4px solid var(--fw-accent, #2271b1);
 }
 
 .fw-ext-newsletter-crm .fw-crm-segment-save form {
@@ -265,7 +265,7 @@
 .fw-ext-newsletter-crm .fw-crm-bar__fill {
 	height: 100%;
 	width: 0;
-	background: #2271b1;
+	background: var(--fw-accent, #2271b1);
 	transition: width .25s ease;
 }
 
