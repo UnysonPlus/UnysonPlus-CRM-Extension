@@ -81,6 +81,8 @@ class FW_Newsletter_CRM_Email_Templates {
 		);
 
 		/**
+		 * Filters the list of starter templates offered in the Email Builder.
+		 *
 		 * Add or remove Email Builder starter templates.
 		 *
 		 * @param array $templates

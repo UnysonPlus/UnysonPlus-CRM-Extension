@@ -36,6 +36,7 @@ class FW_Newsletter_CRM_Email_Compiler {
 	 * @return array
 	 */
 	public static function defaults() {
+		/** Filters the built-in global email styles (width, colors, font, line height) used as the compile context. */
 		return apply_filters( 'unysonplus_newsletter_crm_email_defaults', array(
 			'content_width' => 600,
 			'background'    => '#f6f7f7',
@@ -96,6 +97,8 @@ class FW_Newsletter_CRM_Email_Compiler {
 					$html  = $types[ $block['type'] ]->render( self::block_atts( $block ), $ctx );
 
 				/**
+				 * Filters the HTML of a single compiled email block during Email Builder document compilation.
+				 *
 				 * Filter one compiled block.
 				 *
 				 * @param string $html
@@ -132,6 +135,7 @@ class FW_Newsletter_CRM_Email_Compiler {
 	 * @return array
 	 */
 	public static function widths() {
+		/** Filters the coarse column-width vocabulary (id to row fraction) the email builder offers. */
 		return apply_filters( 'unysonplus_newsletter_crm_email_widths', array(
 			'1_1' => 1,
 			'1_2' => 1 / 2,
@@ -435,6 +439,8 @@ class FW_Newsletter_CRM_Email_Compiler {
 			. '</body></html>';
 
 		/**
+		 * Filters the complete compiled email HTML document, with access to the row markup and style context.
+		 *
 		 * Filter the whole compiled document.
 		 *
 		 * @param string $html

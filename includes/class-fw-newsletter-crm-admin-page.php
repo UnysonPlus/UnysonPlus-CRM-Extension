@@ -851,6 +851,8 @@ class FW_Newsletter_CRM_Admin_Page {
 		}
 
 		/**
+		 * Filters the number of CSV rows processed per import request (default 200).
+		 *
 		 * Rows per request. Small enough to finish comfortably inside one PHP
 		 * request on a modest host; the seconds budget is the real backstop.
 		 *
@@ -862,6 +864,7 @@ class FW_Newsletter_CRM_Admin_Page {
 			'offset'      => (int) $job['offset'],
 			'line'        => (int) $job['line'],
 			'max_rows'    => $max_rows,
+			/** Filters the per-request time budget in seconds for a chunked CSV subscriber import (default 10). */
 			'max_seconds' => (int) apply_filters( 'unysonplus_newsletter_crm_import_batch_seconds', 10 ),
 		) ) );
 

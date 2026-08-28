@@ -38,6 +38,7 @@ class FW_Newsletter_CRM_CSV {
 			'unsubscribed_at' => __( 'Unsubscribed', 'fw' ),
 		);
 
+		/** Filters the column map used when exporting subscribers to CSV. */
 		return apply_filters( 'unysonplus_newsletter_crm_csv_fields', $fields );
 	}
 

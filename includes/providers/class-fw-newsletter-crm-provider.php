@@ -147,6 +147,8 @@ abstract class FW_Newsletter_CRM_Provider {
 		);
 
 		/**
+		 * Filters the outbound subscriber field map a provider sends to its ESP, given the subscriber and provider slug.
+		 *
 		 * Filter the outbound field map.
 		 *
 		 * @param array  $fields

@@ -48,6 +48,8 @@ class FW_Newsletter_CRM_Service {
 		$providers = array( 'local' => new FW_Newsletter_CRM_Provider_Local() );
 
 		/**
+		 * Filters the registered ESP provider map (keyed by slug) so add-ons can register integrations.
+		 *
 		 * Register an ESP integration.
 		 *
 		 * @param FW_Newsletter_CRM_Provider[] $providers Keyed by slug.
@@ -70,6 +72,7 @@ class FW_Newsletter_CRM_Service {
 	 * @return string
 	 */
 	public static function capability() {
+		/** Filters the capability (default manage_options) required to reach the newsletter CRM admin screen and REST endpoints. */
 		return apply_filters( 'unysonplus_newsletter_crm_capability', 'manage_options' );
 	}
 
@@ -94,6 +97,8 @@ class FW_Newsletter_CRM_Service {
 		}
 
 		/**
+		 * Filters signup acceptance before storing; return a WP_Error to veto an address via blocklist or spam checks.
+		 *
 		 * Veto or accept a signup — blocklists, disposable-domain checks, spam
 		 * scoring. Return a WP_Error to reject.
 		 *
@@ -155,6 +160,8 @@ class FW_Newsletter_CRM_Service {
 		}
 
 		/**
+		 * Filters a subscriber row immediately before it is written, the shared seam for CSV import and ESP adapters.
+		 *
 		 * Rewrite the record immediately before it is written — the field-mapping
 		 * seam shared with CSV import and ESP adapters.
 		 *
@@ -216,6 +223,7 @@ class FW_Newsletter_CRM_Service {
 			return new WP_Error( 'fw_crm_bad_token', __( 'That confirmation link is not valid.', 'fw' ) );
 		}
 
+		/** Filters the lifetime in seconds of a double-opt-in confirmation token (default 48 hours). */
 		$ttl = (int) apply_filters( 'unysonplus_newsletter_crm_confirm_token_ttl', 48 * HOUR_IN_SECONDS );
 
 		if ( $ttl > 0 && ! empty( $subscriber->confirm_token_at ) ) {
@@ -915,6 +923,7 @@ class FW_Newsletter_CRM_Service {
 
 		$campaign = FW_Newsletter_CRM_Campaigns::find( $id );
 
+		/** Fires after a paused campaign is set back to sending or scheduled, passing the refreshed campaign object. */
 		do_action( 'unysonplus_newsletter_crm_campaign_resumed', $campaign );
 
 		return $campaign;
@@ -1078,6 +1087,8 @@ class FW_Newsletter_CRM_Service {
 		);
 
 		/**
+		 * Filters the stand-in subscriber object a campaign preview is rendered against.
+		 *
 		 * Change the stand-in recipient a campaign preview renders against.
 		 *
 		 * @param object $subscriber

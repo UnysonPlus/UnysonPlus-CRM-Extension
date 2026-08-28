@@ -242,6 +242,7 @@ class FW_Newsletter_CRM_Sender {
 		$subject = FW_Newsletter_CRM_Mail::replace( $campaign->subject, $subscriber );
 		$body    = FW_Newsletter_CRM_Mail::replace( self::with_unsubscribe( $campaign->body ), $subscriber );
 
+		/** Filters the campaign email array (to, subject, body, headers) for a subscriber just before wp_mail() sends it. */
 		$mail = apply_filters( 'unysonplus_newsletter_crm_campaign_mail', array(
 			'to'      => $subscriber->email,
 			'subject' => $subject,
@@ -336,6 +337,7 @@ class FW_Newsletter_CRM_Sender {
 			$size = 50;
 		}
 
+		/** Filters the number of recipients sent per campaign tick (capped at 500), letting hosts tune against SMTP rate limits. */
 		return (int) apply_filters( 'unysonplus_newsletter_crm_batch_size', min( 500, $size ) );
 	}
 }

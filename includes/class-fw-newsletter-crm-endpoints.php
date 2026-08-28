@@ -51,6 +51,7 @@ class FW_Newsletter_CRM_Endpoints {
 			return '';
 		}
 
+		/** Filters the double-opt-in confirmation link built for a subscriber from their confirm token. */
 		return apply_filters(
 			'unysonplus_newsletter_crm_confirm_url',
 			add_query_arg( self::CONFIRM_ARG, rawurlencode( $subscriber->confirm_token ), home_url( '/' ) ),
@@ -68,6 +69,7 @@ class FW_Newsletter_CRM_Endpoints {
 			return '';
 		}
 
+		/** Filters the unsubscribe link built for a subscriber from their unsubscribe token. */
 		return apply_filters(
 			'unysonplus_newsletter_crm_unsubscribe_url',
 			add_query_arg( self::UNSUBSCRIBE_ARG, rawurlencode( $subscriber->unsubscribe_token ), home_url( '/' ) ),
@@ -255,6 +257,8 @@ class FW_Newsletter_CRM_Endpoints {
 		nocache_headers();
 
 		/**
+		 * Filters the public confirm/unsubscribe page body; return a string to replace the default response entirely.
+		 *
 		 * Replace the endpoint response entirely. Return a non-null string to use
 		 * it as the whole page body.
 		 *

@@ -107,6 +107,8 @@ class FW_Newsletter_CRM_Mail {
 		$html    = self::render_body( self::replace( $body, $subscriber ), $subscriber );
 
 		/**
+		 * Filters an outgoing transactional subscriber email array (to, subject, body, headers) before it is sent, given the subscriber and email kind.
+		 *
 		 * Last chance to rewrite an outgoing subscriber email.
 		 *
 		 * @param array  $mail  [ to, subject, body, headers ]
@@ -201,6 +203,8 @@ class FW_Newsletter_CRM_Mail {
 		);
 
 		/**
+		 * Filters the placeholder-to-value map used to personalize email text for a subscriber.
+		 *
 		 * Add or rewrite email placeholders.
 		 *
 		 * @param array  $map
@@ -265,6 +269,7 @@ class FW_Newsletter_CRM_Mail {
 		 * path below still guards bodies typed into the visual editor.
 		 */
 		if ( self::is_document( $body ) ) {
+			/** Filters the sendable HTML for a pre-compiled email document body before delivery. */
 			return apply_filters( 'unysonplus_newsletter_crm_mail_html', $body, $body, $subscriber );
 		}
 
