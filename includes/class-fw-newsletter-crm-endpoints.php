@@ -32,6 +32,7 @@ class FW_Newsletter_CRM_Endpoints {
 
 	const CONFIRM_ARG     = 'fw-crm-confirm';
 	const UNSUBSCRIBE_ARG = 'fw-crm-unsubscribe';
+	const PREFERENCES_ARG = 'fw-crm-preferences';
 
 	public function __construct() {
 		add_action( 'init', array( $this, '_maybe_handle' ), 1 );
@@ -77,6 +78,29 @@ class FW_Newsletter_CRM_Endpoints {
 		);
 	}
 
+	/**
+	 * The preference centre — the unsubscribe page grown up. Keyed by the same
+	 * never-expiring unsubscribe token, because that is the credential already
+	 * sitting in the footer of every email ever sent; a separate token would be
+	 * one more thing to expire and strand.
+	 *
+	 * @param object $subscriber
+	 *
+	 * @return string
+	 */
+	public static function preferences_url( $subscriber ) {
+		if ( empty( $subscriber->unsubscribe_token ) ) {
+			return '';
+		}
+
+		/** Filters the preference-centre URL for a subscriber (default: the home URL with the token as a query arg). */
+		return apply_filters(
+			'unysonplus_newsletter_crm_preferences_url',
+			add_query_arg( self::PREFERENCES_ARG, rawurlencode( $subscriber->unsubscribe_token ), home_url( '/' ) ),
+			$subscriber
+		);
+	}
+
 	/* ---------------------------------------------------------------------- *
 	 * Handling
 	 * ---------------------------------------------------------------------- */
@@ -88,8 +112,12 @@ class FW_Newsletter_CRM_Endpoints {
 		// phpcs:disable WordPress.Security.NonceVerification -- the token is the credential; see the class docblock.
 		if ( isset( $_REQUEST[ self::CONFIRM_ARG ] ) ) {
 			$this->handle_confirm( sanitize_text_field( wp_unslash( $_REQUEST[ self::CONFIRM_ARG ] ) ) );
+		} elseif ( isset( $_REQUEST[ self::PREFERENCES_ARG ] ) ) {
+			$this->handle_preferences( sanitize_text_field( wp_unslash( $_REQUEST[ self::PREFERENCES_ARG ] ) ) );
 		} elseif ( isset( $_REQUEST[ self::UNSUBSCRIBE_ARG ] ) ) {
 			$this->handle_unsubscribe( sanitize_text_field( wp_unslash( $_REQUEST[ self::UNSUBSCRIBE_ARG ] ) ) );
+		} elseif ( isset( $_REQUEST[ self::PREFERENCES_ARG ] ) ) {
+			$this->handle_preferences( sanitize_text_field( wp_unslash( $_REQUEST[ self::PREFERENCES_ARG ] ) ) );
 		}
 		// phpcs:enable
 	}
@@ -208,6 +236,114 @@ class FW_Newsletter_CRM_Endpoints {
 	 *
 	 * @return string
 	 */
+	/**
+	 * GET renders the lists with the subscriber's current membership ticked;
+	 * POST saves. Saving never unsubscribes — a person on zero lists is still a
+	 * subscriber (campaigns sent to "everyone" reach them), so opting out of
+	 * everything is a separate, explicit button that goes to the unsubscribe
+	 * endpoint. Two different questions, two different controls.
+	 *
+	 * @param string $token
+	 */
+	private function handle_preferences( $token ) {
+		$subscriber = FW_Newsletter_CRM_Subscribers::find_by_token( $token, 'unsubscribe' );
+
+		if ( ! $subscriber || '' === $token ) {
+			$this->render( __( 'Link not valid', 'fw' ), __( 'That preferences link is not valid.', 'fw' ), '' );
+		}
+
+		if ( 'unsubscribed' === $subscriber->status ) {
+			$this->render(
+				__( 'You are unsubscribed', 'fw' ),
+				sprintf(
+					/* translators: %s: the email address */
+					__( '%s is not receiving our emails. To hear from us again, sign up on the website.', 'fw' ),
+					'<strong>' . esc_html( $subscriber->email ) . '</strong>'
+				),
+				$this->home_link()
+			);
+		}
+
+		$lists   = FW_Newsletter_CRM_Lists::all( 'list' );
+		$current = array_map( 'intval', wp_list_pluck( FW_Newsletter_CRM_Subscribers::get_lists( $subscriber->id, 'list' ), 'id' ) );
+		$is_post = 'POST' === ( isset( $_SERVER['REQUEST_METHOD'] ) ? $_SERVER['REQUEST_METHOD'] : '' );
+		$saved   = false;
+
+		if ( $is_post ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- the token is the credential (see the class docblock).
+			$wanted = isset( $_POST['lists'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['lists'] ) ) : array();
+			$valid  = array_map( 'intval', wp_list_pluck( $lists, 'id' ) );
+			$wanted = array_values( array_intersect( $wanted, $valid ) );
+
+			foreach ( $lists as $l ) {
+				$in   = in_array( (int) $l->id, $current, true );
+				$want = in_array( (int) $l->id, $wanted, true );
+
+				if ( $want && ! $in ) {
+					FW_Newsletter_CRM_Service::set_membership( array( $subscriber->id ), $l->id, 'add', 'list' );
+				} elseif ( ! $want && $in ) {
+					FW_Newsletter_CRM_Service::set_membership( array( $subscriber->id ), $l->id, 'remove', 'list' );
+				}
+			}
+
+			/**
+			 * Fires after a subscriber saved their list preferences.
+			 *
+			 * @param object $subscriber
+			 * @param int[]  $wanted List ids now selected.
+			 */
+			do_action( 'unysonplus_newsletter_crm_preferences_saved', $subscriber, $wanted );
+
+			$current = $wanted;
+			$saved   = true;
+		}
+
+		$this->render(
+			__( 'Your email preferences', 'fw' ),
+			( $saved ? '<p class="fw-crm-saved">' . esc_html__( 'Saved.', 'fw' ) . '</p>' : '' )
+			. sprintf(
+				/* translators: %s: the email address */
+				__( 'Choose what %s receives from us.', 'fw' ),
+				'<strong>' . esc_html( $subscriber->email ) . '</strong>'
+			),
+			$this->preferences_form( $token, $lists, $current, $subscriber )
+		);
+	}
+
+	/**
+	 * @param string $token
+	 * @param array  $lists
+	 * @param int[]  $current
+	 * @param object $subscriber
+	 *
+	 * @return string
+	 */
+	private function preferences_form( $token, array $lists, array $current, $subscriber ) {
+		$html = '<form method="post" action="' . esc_url( self::preferences_url( $subscriber ) ) . '" class="fw-crm-prefs">'
+			. '<input type="hidden" name="' . esc_attr( self::PREFERENCES_ARG ) . '" value="' . esc_attr( $token ) . '" />';
+
+		if ( ! $lists ) {
+			$html .= '<p>' . esc_html__( 'There are no lists to choose from yet.', 'fw' ) . '</p>';
+		}
+
+		foreach ( $lists as $l ) {
+			$html .= '<label class="fw-crm-prefs__row">'
+				. '<input type="checkbox" name="lists[]" value="' . (int) $l->id . '" ' . checked( in_array( (int) $l->id, $current, true ), true, false ) . ' /> '
+				. '<span>' . esc_html( $l->title ) . '</span>'
+				. '</label>';
+		}
+
+		if ( $lists ) {
+			$html .= '<button type="submit" class="fw-crm-btn">' . esc_html__( 'Save preferences', 'fw' ) . '</button>';
+		}
+
+		$html .= '</form>'
+			// Opting out of EVERYTHING is a different question, so it is a different control.
+			. '<p class="fw-crm-prefs__out"><a href="' . esc_url( self::unsubscribe_url( $subscriber ) ) . '">' . esc_html__( 'Unsubscribe from all emails', 'fw' ) . '</a></p>';
+
+		return $html;
+	}
+
 	private function confirm_form( $token ) {
 		return '<form method="post" action="' . esc_url( add_query_arg( self::CONFIRM_ARG, rawurlencode( $token ), home_url( '/' ) ) ) . '">'
 			. '<input type="hidden" name="' . esc_attr( self::CONFIRM_ARG ) . '" value="' . esc_attr( $token ) . '">'
@@ -304,6 +440,12 @@ class FW_Newsletter_CRM_Endpoints {
 		.fw-crm-btn:hover, .fw-crm-btn:focus { background: #135e96; }
 		.fw-crm-btn:focus-visible { outline: 2px solid #135e96; outline-offset: 2px; }
 		.fw-crm-back { margin: 1.4em 0 0; font-size: 14px; }
+		.fw-crm-prefs { text-align: left; margin-top: 1.2em; }
+		.fw-crm-prefs__row { display: flex; gap: .6em; align-items: center; padding: .55em 0; border-bottom: 1px solid rgba(0,0,0,.08); cursor: pointer; }
+		.fw-crm-prefs__row:last-of-type { border-bottom: 0; margin-bottom: 1em; }
+		.fw-crm-prefs__out { margin-top: 1.2em; font-size: 14px; }
+		.fw-crm-prefs__out a { color: #787c82; }
+		.fw-crm-saved { color: #00a32a; font-weight: 600; margin: 0 0 .6em; }
 		.fw-crm-back a { color: #2271b1; }
 		@media (prefers-color-scheme: dark) {
 			body { background: #1d2327; color: #f0f0f1; }

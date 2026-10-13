@@ -118,7 +118,7 @@ class FW_Newsletter_CRM_Service {
 
 		$double_optin = array_key_exists( 'double_optin', $args )
 			? (bool) $args['double_optin']
-			: self::setting_is_on( 'double_optin' );
+			: self::setting_is_on( 'double_optin', true ); // On unless the site turned it off.
 
 		$data = array(
 			'email'      => $email,
@@ -1206,14 +1206,17 @@ class FW_Newsletter_CRM_Service {
 			return $row ? (int) $row->id : 0;
 		}
 
-		$slug = sanitize_key( (string) $value );
+		// Slug the value the same way the admin screen does, so a name ("Stage: New lead") finds the
+		// tag created there (stage-new-lead) instead of creating a look-alike (stagenewlead).
+		$raw  = trim( (string) $value );
+		$slug = sanitize_key( sanitize_title( $raw ) );
 
 		if ( '' === $slug ) {
 			return 0;
 		}
 
 		$row = $create
-			? FW_Newsletter_CRM_Lists::get_or_create( $slug, $type )
+			? FW_Newsletter_CRM_Lists::get_or_create( $slug, $type, $raw !== $slug ? sanitize_text_field( $raw ) : '' )
 			: FW_Newsletter_CRM_Lists::find_by_slug( $slug, $type );
 
 		return $row ? (int) $row->id : 0;

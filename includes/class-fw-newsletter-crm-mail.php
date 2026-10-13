@@ -200,6 +200,7 @@ class FW_Newsletter_CRM_Mail {
 			'{{site_url}}'        => home_url( '/' ),
 			'{{confirm_url}}'     => FW_Newsletter_CRM_Endpoints::confirm_url( $subscriber ),
 			'{{unsubscribe_url}}' => FW_Newsletter_CRM_Endpoints::unsubscribe_url( $subscriber ),
+			'{{preferences_url}}' => FW_Newsletter_CRM_Endpoints::preferences_url( $subscriber ),
 		);
 
 		/**

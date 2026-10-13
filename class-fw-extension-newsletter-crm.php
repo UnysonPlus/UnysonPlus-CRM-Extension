@@ -42,6 +42,7 @@ class FW_Extension_Newsletter_CRM extends FW_Extension {
 		require_once $dir . 'class-fw-newsletter-crm-endpoints.php';
 		require_once $dir . 'class-fw-newsletter-crm-privacy.php';
 		require_once $dir . 'class-fw-newsletter-crm-rest.php';
+		require_once $dir . 'class-fw-newsletter-crm-forms-action.php'; // Forms bridge: subscribe action + activity panel
 
 		// The Email Builder option type. Registered on the option-types init
 		// action (the framework's own hook for this), matching how the shortcodes
@@ -63,6 +64,7 @@ class FW_Extension_Newsletter_CRM extends FW_Extension {
 		new FW_Newsletter_CRM_Sender(); // registers the cron schedule + worker
 		new FW_Newsletter_CRM_Endpoints();
 		new FW_Newsletter_CRM_Privacy();
+		new FW_Newsletter_CRM_Forms_Bridge();
 		new FW_Newsletter_CRM_REST();
 
 		if ( is_admin() ) {

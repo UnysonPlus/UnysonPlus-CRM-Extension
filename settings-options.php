@@ -61,7 +61,7 @@ $options = array(
 				'type'         => 'switch',
 				'label'        => __( 'Double opt-in', 'fw' ),
 				'desc'         => __( 'New signups are stored as Pending and emailed a confirmation link; they only become Subscribed once they click it. Strongly recommended — it is what keeps a mistyped or maliciously-entered address off your list, and what most email regulations expect.', 'fw' ),
-				'value'        => 'no',
+				'value'        => 'yes',
 				'right-choice' => array( 'value' => 'yes', 'label' => __( 'Yes', 'fw' ) ),
 				'left-choice'  => array( 'value' => 'no', 'label' => __( 'No', 'fw' ) ),
 			),

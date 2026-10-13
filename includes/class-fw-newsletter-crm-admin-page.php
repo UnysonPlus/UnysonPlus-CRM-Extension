@@ -935,7 +935,7 @@ class FW_Newsletter_CRM_Admin_Page {
 	private function placeholder_help( $mode = 'visual' ) {
 		?>
 		<p class="description">
-			<?php esc_html_e( 'Placeholders: {{name}}, {{first_name}}, {{last_name}}, {{email}}, {{site_name}}, {{site_url}}, {{unsubscribe_url}}. If you leave out {{unsubscribe_url}} an unsubscribe line is appended automatically — bulk email must always carry one.', 'fw' ); ?>
+			<?php esc_html_e( 'Placeholders: {{name}}, {{first_name}}, {{last_name}}, {{email}}, {{site_name}}, {{site_url}}, {{unsubscribe_url}}, {{preferences_url}} (a page where the reader picks which lists to receive). If you leave out {{unsubscribe_url}} an unsubscribe line is appended automatically — bulk email must always carry one.', 'fw' ); ?>
 		</p>
 		<p class="description">
 			<?php
@@ -1360,6 +1360,14 @@ class FW_Newsletter_CRM_Admin_Page {
 			   onclick="return confirm('<?php echo esc_js( __( 'Delete this subscriber permanently?', 'fw' ) ); ?>');"><?php esc_html_e( 'Delete', 'fw' ); ?></a>
 		</p>
 		<?php
+		/**
+		 * Fires at the end of the single-subscriber screen. The Forms bridge adds
+		 * the person's form entries here (Activity) — a read across the join by
+		 * email, so the CRM never has to know how entries are stored.
+		 *
+		 * @param object $subscriber
+		 */
+		do_action( 'unysonplus_newsletter_crm_subscriber_view_after', $subscriber );
 	}
 
 	/* ---------------------------------------------------------------------- *

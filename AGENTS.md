@@ -156,6 +156,38 @@ blank", it greys out like the hint it is, and it keeps the description a fixed,
 translatable sentence instead of one carrying a site-specific name. Treat that
 as the rule: if a block resolves something implicitly, the panel has to say so.
 
+## The preference centre is the unsubscribe page grown up — and saving never unsubscribes
+
+`?fw-crm-preferences=<token>` (`Endpoints::preferences_url()`, placeholder `{{preferences_url}}`)
+renders every `list`-type list with the subscriber's membership ticked; POST saves through
+`Service::set_membership()` add/remove per list.
+
+- **Keyed by the unsubscribe token**, deliberately: it never expires and already sits in the footer
+  of every email ever sent. A separate preferences token would be one more thing to expire and
+  strand. Same credential model, same "the token is the credential" reasoning as one-click
+  unsubscribe.
+- **Saving never unsubscribes.** A person on zero lists is still a subscriber — a campaign sent to
+  "everyone" reaches them. Opting out of everything is a different question, so it is a different,
+  explicit control: the "Unsubscribe from all emails" link to the unsubscribe endpoint. Do not
+  "helpfully" unsubscribe on an empty save.
+- An unsubscribed person sees a message, not checkboxes: re-subscribing is a signup with consent,
+  not a checkbox on a page reached from an old email.
+
+## The Forms bridge — subscribe action + activity panel, never a write to entries
+
+`class-fw-newsletter-crm-forms-action.php` registers a **Subscribe** action through Forms' own
+`fw_ext_forms_actions` filter and an **Activity** panel on the subscriber screen
+(`unysonplus_newsletter_crm_subscriber_view_after`). Everything is guarded on the Forms classes
+existing; deactivate Forms and the CRM loses only the panel.
+
+- **Nothing subscribes anyone without a ticked Consent field whose purpose is `newsletter`.** Not an
+  email field, not a label, not the action being switched on. The consent field is a dedicated
+  form-builder TYPE precisely so this is checked by type, and the one test is Forms'
+  `newsletter_consent_given()` — the CRM does not reinterpret it. A ticked TERMS box is not newsletter
+  consent. The suite proves all four negatives.
+- Entries are submissions; subscribers are people (see the Design Decisions log). The CRM **reads**
+  entries by email for the panel and **never writes** them.
+
 ## The email template library is the FRAMEWORK's, not ours
 
 `FW_Option_Type_Email_Builder::_get_defaults()` sets **`'template_saving' => true`**, and that

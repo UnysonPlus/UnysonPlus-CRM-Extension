@@ -14,6 +14,29 @@ $manifest['description'] = __(
 /**
  * Changelog ----------------------------------------------------------------
  *
+ * 1.0.33 - Preference centre: `{{preferences_url}}` opens a page where a
+ *         subscriber ticks the lists they want, saved per list. Keyed by the
+ *         unsubscribe token on purpose — it never expires and already sits in
+ *         the footer of every email ever sent, so a separate token would be one
+ *         more thing to expire and strand. Saving never unsubscribes: a person
+ *         on zero lists is still a subscriber, so opting out of everything is
+ *         the separate, explicit "Unsubscribe from all emails" link. An
+ *         unsubscribed person sees a message rather than checkboxes, because
+ *         coming back is a signup with consent, not a checkbox on a page
+ *         reached from an old email.
+ *
+ * 1.0.32 - Forms bridge. A "Subscribe to the newsletter" action for the Forms
+ *         extension (per-form list, tags and name field), plus a "Form entries"
+ *         activity panel on the subscriber screen. The action is gated on ONE
+ *         thing and one thing only: a ticked Consent field whose purpose is
+ *         "newsletter". Not an email field, not a label that says newsletter,
+ *         not the action being switched on — the consent field is a dedicated
+ *         form-builder type precisely so this is checked by type, and a ticked
+ *         terms box does not count. It follows the double opt-in setting, so
+ *         when that is on the confirmation email is the consent record.
+ *         Entries are submissions and subscribers are people: the panel reads
+ *         entries by email, and the CRM never writes them.
+ *
  * 1.0.26 - Every block gains an "Extra styles" escape hatch for CSS its own
  *         options don't expose.
  *         Deliberately INLINE DECLARATIONS, not a Custom CSS box. A page
@@ -340,7 +363,7 @@ $manifest['description'] = __(
  *         import/export, provider interface, lifecycle hooks, REST and GDPR.
  */
 
-$manifest['version']    = '1.0.31';
+$manifest['version']    = '1.0.36';
 $manifest['display']    = true;
 $manifest['standalone'] = true;
 $manifest['thumbnail']  = 'thumbnail.svg';
