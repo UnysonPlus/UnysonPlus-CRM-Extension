@@ -1,4 +1,4 @@
-# Newsletter / Subscriber CRM — working rules
+# CRM — working rules
 
 The storage + management layer under the existing `[newsletter]` shortcode. Read this
 before editing anything in this folder.
@@ -6,7 +6,7 @@ before editing anything in this folder.
 ## The layering is the design — do not shortcut it
 
 ```
-Installer   framework/extensions/newsletter-crm/includes/class-fw-newsletter-crm-installer.php
+Installer   framework/extensions/crm/includes/class-fw-crm-installer.php
 Repository  …-subscribers.php · …-lists.php
 Service     …-service.php
 Providers   includes/providers/…
@@ -33,8 +33,8 @@ line, lowercase type keywords, `KEY` never `INDEX`, and the collation from
 `$wpdb->get_charset_collate()`. Break any of those and it silently re-runs `ALTER`s on
 every load.
 
-- Guarded by the `fw_ext_newsletter_crm_db_version` option, compared against
-  `FW_Newsletter_CRM_Installer::DB_VERSION`. **Bump that constant whenever you change
+- Guarded by the `fw_ext_crm_db_version` option, compared against
+  `FW_CRM_Installer::DB_VERSION`. **Bump that constant whenever you change
   the schema**, or the change never reaches an existing site.
 - The check runs on every `_init()` — one autoloaded `get_option()` when current — so
   activation *and* plugin-update upgrades self-heal with no activation hook to miss.
@@ -86,7 +86,7 @@ every load.
   From address and authentication; a raw `mail()` call breaks SPF/DKIM alignment on
   every site that configured it.
 - **The mail class hooks the lifecycle actions rather than being called from the
-  service.** That is deliberate dogfooding — if `FW_Newsletter_CRM_Mail` were deleted
+  service.** That is deliberate dogfooding — if `FW_CRM_Mail` were deleted
   the store would still work. Don't move sending into the service.
 - **Lists and tags are ONE table** discriminated by `type`, with ONE polymorphic pivot
   (`subscriber_id`, `object_id`, `object_type`). Do not add a parallel tags table, and
@@ -175,9 +175,9 @@ renders every `list`-type list with the subscriber's membership ticked; POST sav
 
 ## The Forms bridge — subscribe action + activity panel, never a write to entries
 
-`class-fw-newsletter-crm-forms-action.php` registers a **Subscribe** action through Forms' own
+`class-fw-crm-forms-action.php` registers a **Subscribe** action through Forms' own
 `fw_ext_forms_actions` filter and an **Activity** panel on the subscriber screen
-(`unysonplus_newsletter_crm_subscriber_view_after`). Everything is guarded on the Forms classes
+(`unysonplus_crm_subscriber_view_after`). Everything is guarded on the Forms classes
 existing; deactivate Forms and the CRM loses only the panel.
 
 - **Nothing subscribes anyone without a ticked Consent field whose purpose is `newsletter`.** Not an
@@ -198,7 +198,7 @@ can never show up in the page builder's list. Do not write a second library.
 
 Our starters ride the framework's own hook,
 `fw_ext_builder:predefined_templates:email-builder:full`, from
-`FW_Newsletter_CRM_Email_Templates`.
+`FW_CRM_Email_Templates`.
 
 - **Starters are authored as PHP, not pasted JSON.** A template stores option VALUES, so it
   goes stale the moment a block's options change — the same trap the theme Preset Library has.
@@ -230,8 +230,8 @@ actually arrives, and it still goes through kses. Same test, same reasoning, as
 
 ## Adding an ESP provider
 
-Subclass `FW_Newsletter_CRM_Provider`, register on
-`unysonplus_newsletter_crm_providers`. The contract was designed against Mailchimp,
+Subclass `FW_CRM_Provider`, register on
+`unysonplus_crm_providers`. The contract was designed against Mailchimp,
 MailerLite and Brevo — all three are **email-keyed upserts**, so `subscribe()` takes the
 whole subscriber and the adapter decides how to be idempotent (Mailchimp's
 `md5(lowercased email)` in the URL, MailerLite's POST-is-upsert, Brevo's
@@ -245,11 +245,11 @@ the error in subscriber meta and carries on.
 Per the workspace rules: bump `manifest.php` on every meaningful change here, mirror to
 every `D:\xampp\htdocs` install, and leave the CORE version (`unysonplus.php` +
 `framework/manifest.php`) alone until the confirmed-milestone / release step. Repo:
-`UnysonPlus-Newsletter-CRM-Extension` (repo root = this folder).
+`UnysonPlus-CRM-Extension` (repo root = this folder).
 
 ## Campaign sending — the rules that keep it correct
 
-Everything about `FW_Newsletter_CRM_Sender` follows from three facts about WP-Cron.
+Everything about `FW_CRM_Sender` follows from three facts about WP-Cron.
 None of them are negotiable; if you change this code, re-read them first.
 
 1. **WP-Cron fires on page loads, not on a clock, and can fire the same event twice

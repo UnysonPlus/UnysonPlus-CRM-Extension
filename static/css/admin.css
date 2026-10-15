@@ -6,7 +6,7 @@
  * layout and the two Tools panels.
  */
 
-.fw-ext-newsletter-crm .fw-crm-toolbar {
+.fw-ext-crm .fw-crm-toolbar {
 	margin: 0 0 .8em;
 	display: flex;
 	flex-wrap: wrap;
@@ -16,7 +16,7 @@
 
 /* --- Status pills --------------------------------------------------------- */
 
-.fw-ext-newsletter-crm .fw-crm-status {
+.fw-ext-crm .fw-crm-status {
 	display: inline-block;
 	padding: .1em .6em;
 	border-radius: 999px;
@@ -27,46 +27,46 @@
 	color: #50575e;
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--subscribed {
+.fw-ext-crm .fw-crm-status--subscribed {
 	background: #edfaef;
 	color: #007017;
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--pending {
+.fw-ext-crm .fw-crm-status--pending {
 	background: #fcf9e8;
 	color: #8a6116;
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--unsubscribed {
+.fw-ext-crm .fw-crm-status--unsubscribed {
 	background: #f0f0f1;
 	color: #646970;
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--bounced,
-.fw-ext-newsletter-crm .fw-crm-status--complained {
+.fw-ext-crm .fw-crm-status--bounced,
+.fw-ext-crm .fw-crm-status--complained {
 	background: #fcf0f1;
 	color: #b32d2e;
 }
 
 /* Campaign statuses reuse the same pill. */
 
-.fw-ext-newsletter-crm .fw-crm-status--sent {
+.fw-ext-crm .fw-crm-status--sent {
 	background: #edfaef;
 	color: #007017;
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--sending,
-.fw-ext-newsletter-crm .fw-crm-status--scheduled {
+.fw-ext-crm .fw-crm-status--sending,
+.fw-ext-crm .fw-crm-status--scheduled {
 	background: #e5f1fb;
 	color: var(--fw-accent-hover, #135e96);
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--paused {
+.fw-ext-crm .fw-crm-status--paused {
 	background: #fcf9e8;
 	color: #8a6116;
 }
 
-.fw-ext-newsletter-crm .fw-crm-status--draft {
+.fw-ext-crm .fw-crm-status--draft {
 	background: #f0f0f1;
 	color: #646970;
 }
@@ -85,7 +85,7 @@
  * backend-options.min.css sets that reset with !important, so matching it needs
  * !important back. Scoped to this extension's wrap, so no other builder or
  * options screen can be affected. */
-.fw-ext-newsletter-crm .fw-backend-postboxes > .postbox > .inside {
+.fw-ext-crm .fw-backend-postboxes > .postbox > .inside {
 	padding-left: 16px !important;
 	padding-right: 16px !important;
 	padding-bottom: 8px !important;
@@ -93,12 +93,12 @@
 
 /* form-table's default 200px label column is cramped once the box is full
  * width, and its first cell has no left padding of its own. */
-.fw-ext-newsletter-crm .fw-backend-postboxes > .postbox > .inside > .form-table th {
+.fw-ext-crm .fw-backend-postboxes > .postbox > .inside > .form-table th {
 	width: 180px;
 	padding-left: 0;
 }
 
-.fw-ext-newsletter-crm .fw-crm-body-preview {
+.fw-ext-crm .fw-crm-body-preview {
 	max-width: 620px;
 	padding: 1em 1.4em;
 	background: #fff;
@@ -106,96 +106,73 @@
 	border-radius: 4px;
 }
 
-.fw-ext-newsletter-crm .fw-crm-body-preview > :first-child {
+.fw-ext-crm .fw-crm-body-preview > :first-child {
 	margin-top: 0;
 }
 
-.fw-ext-newsletter-crm td .fw-crm-bar {
+.fw-ext-crm td .fw-crm-bar {
 	margin: 0 0 .35em;
 	height: 10px;
 }
 
-/* --- Inline "add subscriber" form ---------------------------------------- */
-
-.fw-ext-newsletter-crm .fw-crm-add {
-	margin: 0 0 1.2em;
-	padding: 1em 1.2em .4em;
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-left: 4px solid var(--fw-accent, #2271b1);
-	box-shadow: 0 1px 1px rgba( 0, 0, 0, .04 );
-}
-
-.fw-ext-newsletter-crm .fw-crm-field {
-	display: inline-flex;
-	flex-direction: column;
-	gap: .2em;
-	margin: 0 1.2em .8em 0;
-	vertical-align: top;
-}
-
-.fw-ext-newsletter-crm .fw-crm-field > span {
-	font-weight: 600;
-	font-size: 12px;
-	color: #50575e;
-}
-
 /* --- Tools tab ------------------------------------------------------------ */
 
-.fw-ext-newsletter-crm .fw-crm-panels {
+.fw-ext-crm .fw-crm-panels {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 1.2em;
 	align-items: flex-start;
 }
 
-.fw-ext-newsletter-crm .fw-crm-panel {
+/* The panel itself is drawn by app.css; here only how the Tools panels share a row. */
+.fw-ext-crm .fw-crm-panels > .fw-crm-panel {
 	flex: 1 1 360px;
 	max-width: 560px;
-	padding: .4em 1.4em 1.2em;
-	background: #fff;
-	border: 1px solid #c3c4c7;
-	box-shadow: 0 1px 1px rgba( 0, 0, 0, .04 );
 }
 
-.fw-ext-newsletter-crm .fw-crm-panel .description {
+.fw-ext-crm .fw-crm-panel > h2:first-child,
+.fw-ext-crm .fw-crm-panel > h3:first-child {
+	margin-top: 0;
+}
+
+.fw-ext-crm .fw-crm-panel .description {
 	max-width: 46em;
 }
 
-.fw-ext-newsletter-crm .fw-crm-panel--wide {
+.fw-ext-crm .fw-crm-panels > .fw-crm-panel--wide {
 	flex-basis: 100%;
 	max-width: none;
 	margin-top: 1.2em;
 }
 
-.fw-ext-newsletter-crm .fw-crm-objects code {
+.fw-ext-crm .fw-crm-objects code {
 	font-size: 11px;
 	background: #f0f0f1;
 	padding: 1px 5px;
 }
 
-.fw-ext-newsletter-crm .fw-crm-inline-add {
+.fw-ext-crm .fw-crm-inline-add {
 	display: flex;
 	gap: .4em;
 	margin-top: .9em;
 }
 
-.fw-ext-newsletter-crm .fw-crm-inline-add input[type="text"] {
+.fw-ext-crm .fw-crm-inline-add input[type="text"] {
 	flex: 1 1 auto;
 }
 
-.fw-ext-newsletter-crm .fw-crm-remove {
+.fw-ext-crm .fw-crm-remove {
 	color: #b32d2e;
 	text-decoration: none;
 }
 
-.fw-ext-newsletter-crm .fw-crm-remove:hover {
+.fw-ext-crm .fw-crm-remove:hover {
 	text-decoration: underline;
 }
 
 /* --- Save-as-segment bar -------------------------------------------------- */
 
-.fw-ext-newsletter-crm .fw-crm-segment-save {
+.fw-ext-crm .fw-crm-segment-save {
 	margin: 0 0 .8em;
 	padding: .7em 1em;
 	background: #fff;
@@ -203,58 +180,50 @@
 	border-left: 4px solid var(--fw-accent, #2271b1);
 }
 
-.fw-ext-newsletter-crm .fw-crm-segment-save form {
+.fw-ext-crm .fw-crm-segment-save form {
 	display: flex;
 	flex-wrap: wrap;
 	gap: .5em;
 	align-items: center;
 }
 
-.fw-ext-newsletter-crm .fw-crm-segment-save__what {
+.fw-ext-crm .fw-crm-segment-save__what {
 	margin-right: auto;
 	color: #50575e;
 }
 
 /* --- Bulk tag picker ------------------------------------------------------ */
 
-.fw-ext-newsletter-crm .fw-crm-bulk-tag {
+.fw-ext-crm .fw-crm-bulk-tag {
 	margin-left: -6px;
 }
 
 /* --- Per-subscriber membership -------------------------------------------- */
 
-.fw-ext-newsletter-crm .fw-crm-membership {
-	max-width: 780px;
-	margin-top: 1.2em;
-	padding: .2em 1.2em 1em;
-	background: #fff;
-	border: 1px solid #c3c4c7;
-}
-
-.fw-ext-newsletter-crm .fw-crm-membership__set {
-	margin: 1em 0 0;
+.fw-ext-crm .fw-crm-membership__set {
+	margin: 0 0 .8em;
 	padding: 0;
 	border: 0;
 }
 
-.fw-ext-newsletter-crm .fw-crm-membership__set legend {
+.fw-ext-crm .fw-crm-membership__set legend {
 	padding: 0;
 	font-weight: 600;
 	color: #50575e;
 }
 
-.fw-ext-newsletter-crm .fw-crm-membership__set label {
+.fw-ext-crm .fw-crm-membership__set label {
 	display: inline-block;
 	margin: .4em 1.2em .2em 0;
 }
 
 /* --- Import progress ------------------------------------------------------ */
 
-.fw-ext-newsletter-crm .fw-crm-import-progress {
+.fw-ext-crm .fw-crm-import-progress {
 	max-width: 620px;
 }
 
-.fw-ext-newsletter-crm .fw-crm-bar {
+.fw-ext-crm .fw-crm-bar {
 	height: 18px;
 	margin: 1em 0 .6em;
 	background: #f0f0f1;
@@ -262,54 +231,43 @@
 	overflow: hidden;
 }
 
-.fw-ext-newsletter-crm .fw-crm-bar__fill {
+.fw-ext-crm .fw-crm-bar__fill {
 	height: 100%;
 	width: 0;
 	background: var(--fw-accent, #2271b1);
 	transition: width .25s ease;
 }
 
-.fw-ext-newsletter-crm .fw-crm-import-stats {
+.fw-ext-crm .fw-crm-import-stats {
 	color: #50575e;
 }
 
-.fw-ext-newsletter-crm .fw-crm-import-pct {
+.fw-ext-crm .fw-crm-import-pct {
 	font-weight: 600;
 	color: #1d2327;
 }
 
-/* --- Single subscriber ---------------------------------------------------- */
-
-.fw-ext-newsletter-crm .fw-crm-single {
-	max-width: 780px;
-}
-
-.fw-ext-newsletter-crm .fw-crm-single th {
-	text-align: left;
-	color: #50575e;
-}
-
 /* --- Danger zone ---------------------------------------------------------- */
 
-.fw-ext-newsletter-crm .fw-crm-danger {
+.fw-ext-crm .fw-crm-danger {
 	margin-top: 2em;
 	padding: .4em 1.4em 1em;
 	background: #fff;
-	border: 1px solid #c3c4c7;
-	border-left: 4px solid #b32d2e;
+	border: 1px solid color-mix( in srgb, #b32d2e 45%, #c3c4c7 );
+	border-radius: 10px;
 }
 
-.fw-ext-newsletter-crm .fw-crm-danger .description {
+.fw-ext-crm .fw-crm-danger .description {
 	max-width: 46em;
 }
 
-.fw-ext-newsletter-crm .button-link-delete {
+.fw-ext-crm .button-link-delete {
 	color: #b32d2e;
 }
 
 /* --- Campaign preview ----------------------------------------------------- */
 
-.fw-ext-newsletter-crm .fw-crm-preview__bar {
+.fw-ext-crm .fw-crm-preview__bar {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -318,24 +276,24 @@
 }
 
 /* Each toggle pair reads as one control rather than two loose buttons. */
-.fw-ext-newsletter-crm .fw-crm-preview__group {
+.fw-ext-crm .fw-crm-preview__group {
 	display: inline-flex;
 	gap: 0;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__group .button + .button {
+.fw-ext-crm .fw-crm-preview__group .button + .button {
 	margin-left: -1px;
 	border-top-left-radius: 0;
 	border-bottom-left-radius: 0;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__group .button:not(:last-child) {
+.fw-ext-crm .fw-crm-preview__group .button:not(:last-child) {
 	border-top-right-radius: 0;
 	border-bottom-right-radius: 0;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__width.is-active,
-.fw-ext-newsletter-crm .fw-crm-preview__format.is-active {
+.fw-ext-crm .fw-crm-preview__width.is-active,
+.fw-ext-crm .fw-crm-preview__format.is-active {
 	background: #f0f0f1;
 	border-color: #8c8f94;
 	color: #1d2327;
@@ -346,24 +304,24 @@
 	z-index: 1;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__size {
+.fw-ext-crm .fw-crm-preview__size {
 	margin-left: auto;
 	color: #646970;
 	font-size: 12px;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__size.is-over {
+.fw-ext-crm .fw-crm-preview__size.is-over {
 	color: #b32d2e;
 	font-weight: 600;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__subject {
+.fw-ext-crm .fw-crm-preview__subject {
 	margin: 0 0 1em;
 }
 
 /* The stage is the "outside the email" surface, so the 600px canvas reads as a
  * message sitting in a client rather than as the page itself. */
-.fw-ext-newsletter-crm .fw-crm-preview__stage {
+.fw-ext-crm .fw-crm-preview__stage {
 	display: flex;
 	justify-content: center;
 	padding: 1.5em 1em;
@@ -372,7 +330,7 @@
 	border-radius: 3px;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__frame {
+.fw-ext-crm .fw-crm-preview__frame {
 	width: 600px;
 	max-width: 100%;
 	height: 620px;
@@ -382,7 +340,7 @@
 	transition: width .15s ease;
 }
 
-.fw-ext-newsletter-crm .fw-crm-preview__text {
+.fw-ext-crm .fw-crm-preview__text {
 	width: 100%;
 	max-width: 720px;
 	min-height: 620px;

@@ -3,7 +3,7 @@
 }
 
 /**
- * Settings for the Newsletter / Subscriber CRM extension.
+ * Settings for the CRM extension.
  *
  * Rendered both on the extension's own Settings tab (Unyson+ → Subscribers) and
  * by the Extensions manager's settings form, so it must stay a plain options
@@ -14,19 +14,19 @@
 $list_choices = array( '' => __( '— Default —', 'fw' ) );
 
 // The lists table may not exist yet on the very first load after activation.
-if ( class_exists( 'FW_Newsletter_CRM_Lists' ) && get_option( 'fw_ext_newsletter_crm_db_version' ) ) {
-	foreach ( FW_Newsletter_CRM_Lists::all( 'list' ) as $list ) {
+if ( class_exists( 'FW_CRM_Lists' ) && get_option( 'fw_ext_crm_db_version' ) ) {
+	foreach ( FW_CRM_Lists::all( 'list' ) as $list ) {
 		$list_choices[ $list->slug ] = $list->title;
 	}
 }
 
 // Email defaults live with the mail class, so the settings screen and an unsaved
 // send can never disagree about what the default template is.
-$confirm_defaults = class_exists( 'FW_Newsletter_CRM_Mail' )
-	? FW_Newsletter_CRM_Mail::defaults( 'confirm' )
+$confirm_defaults = class_exists( 'FW_CRM_Mail' )
+	? FW_CRM_Mail::defaults( 'confirm' )
 	: array( 'subject' => '', 'body' => '' );
-$welcome_defaults = class_exists( 'FW_Newsletter_CRM_Mail' )
-	? FW_Newsletter_CRM_Mail::defaults( 'welcome' )
+$welcome_defaults = class_exists( 'FW_CRM_Mail' )
+	? FW_CRM_Mail::defaults( 'welcome' )
 	: array( 'subject' => '', 'body' => '' );
 
 $options = array(
@@ -117,11 +117,58 @@ $options = array(
 		'type'    => 'box',
 		'title'   => __( 'Campaign sending', 'fw' ),
 		'options' => array(
+			'send_rate' => array(
+				'type'    => 'select',
+				'label'   => __( 'How fast to send', 'fw' ),
+				'desc'    => __( 'Shared hosting usually allows a few hundred emails an hour; going over gets mail refused or the account flagged. With an email service, sending can be much faster.', 'fw' ),
+				'value'   => 'shared',
+				'choices' => array(
+					'shared'  => __( 'Shared hosting: up to 300 an hour', 'fw' ),
+					'vps'     => __( 'VPS or managed hosting: up to 1,500 an hour', 'fw' ),
+					'service' => __( 'An email service: up to 10 a second', 'fw' ),
+					'custom'  => __( 'Custom (below)', 'fw' ),
+				),
+			),
+			'send_rate_custom' => array(
+				'type'  => 'text',
+				'label' => __( 'Custom limit (emails an hour)', 'fw' ),
+				'desc'  => __( 'Used when "How fast to send" is Custom. Ask your host or email service what they allow.', 'fw' ),
+				'value' => '300',
+			),
+			'queue_retention_days' => array(
+				'type'  => 'text',
+				'label' => __( 'Keep the per-person send log for (days)', 'fw' ),
+				'desc'  => __( 'After a campaign has finished, the list of who it was sent to is cleared after this many days to keep the database small. The campaign\'s totals are kept. 0 keeps it for ever.', 'fw' ),
+				'value' => '180',
+			),
 			'batch_size' => array(
 				'type'  => 'text',
 				'label' => __( 'Recipients per batch', 'fw' ),
 				'desc'  => __( 'How many emails go out each time the sender runs (about once a minute, traffic permitting). The real ceiling is your mail host\'s rate limit, not PHP — if messages start bouncing or getting throttled, lower this. Capped at 500.', 'fw' ),
 				'value' => '50',
+			),
+		),
+	),
+
+	'box_tracking' => array(
+		'type'    => 'box',
+		'title'   => __( 'Campaign tracking', 'fw' ),
+		'options' => array(
+			'track_opens' => array(
+				'type'         => 'switch',
+				'label'        => __( 'Track opens', 'fw' ),
+				'desc'         => __( 'Adds an invisible image to each campaign email. Opens are an estimate: some mail apps load images for every email, others block them.', 'fw' ),
+				'value'        => 'yes',
+				'right-choice' => array( 'value' => 'yes', 'label' => __( 'Yes', 'fw' ) ),
+				'left-choice'  => array( 'value' => 'no', 'label' => __( 'No', 'fw' ) ),
+			),
+			'track_clicks' => array(
+				'type'         => 'switch',
+				'label'        => __( 'Track clicks', 'fw' ),
+				'desc'         => __( 'Links in campaign emails pass through your site first, so you can see what people clicked. Clicks made by email security scanners are left out.', 'fw' ),
+				'value'        => 'yes',
+				'right-choice' => array( 'value' => 'yes', 'label' => __( 'Yes', 'fw' ) ),
+				'left-choice'  => array( 'value' => 'no', 'label' => __( 'No', 'fw' ) ),
 			),
 		),
 	),

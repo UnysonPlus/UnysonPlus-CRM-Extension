@@ -1,0 +1,70 @@
+/* CRM → "Save the answers" table in a contact form's Settings tab. */
+.fw-crm-form-map__table {
+	width: 100%;
+	max-width: 720px;
+	border-collapse: collapse;
+}
+
+.fw-crm-form-map__table th,
+.fw-crm-form-map__table td {
+	padding: 7px 10px 7px 0;
+	border-bottom: 1px solid #e2e4e7;
+	text-align: left;
+	vertical-align: middle;
+}
+
+.fw-crm-form-map__table thead th {
+	padding-top: 0;
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+.fw-crm-form-map__table tbody th {
+	width: 40%;
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+
+.fw-crm-form-map__table select {
+	width: 100%;
+	max-width: 360px;
+}
+
+.fw-crm-form-map__fixed {
+	color: #50575e;
+}
+
+.fw-crm-form-map__record {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px 24px;
+	margin: 14px 0 0;
+}
+
+.fw-crm-form-map__record label {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: min(260px, 100%);
+}
+
+.fw-crm-form-map__record span {
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+.fw-crm-form-map__note {
+	margin: 10px 0 0;
+	color: #50575e;
+}
+
+.fw-crm-form-map__warn {
+	margin: 0 0 10px;
+	padding: 8px 12px;
+	border: 1px solid #dba617;
+	border-radius: 4px;
+	background: #fcf9e8;
+	color: #1d2327;
+}
