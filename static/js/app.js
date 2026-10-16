@@ -1,46 +1,16 @@
 /**
- * CRM app shell behaviour: focus mode, the small-screen menu, the "/" search
- * shortcut, the New menu, in-place edit panels and auto-submitting pickers.
- * Everything works without it except focus mode's saved preference.
+ * CRM screen behaviour: the "/" search shortcut, the New menu, in-place edit
+ * panels, auto-submitting pickers and the dialogs.
+ *
+ * Focus mode and the off-canvas sidebar belong to the app shell and are handled
+ * by the framework's admin-app.js — this file must not duplicate them.
  */
 ( function () {
 	'use strict';
 
-	var app = document.getElementById( 'fw-crm-app' );
+	var app = document.getElementById( 'fw-app' );
 	if ( ! app ) {
 		return;
-	}
-
-	/* Focus mode: hide or show the WordPress menu, and remember the choice. */
-	var focusBtn = app.querySelector( '.fw-crm-focus-toggle' );
-	if ( focusBtn ) {
-		focusBtn.addEventListener( 'click', function () {
-			var on = ! document.body.classList.contains( 'fw-crm-focus' );
-			document.body.classList.toggle( 'fw-crm-focus', on );
-			focusBtn.setAttribute( 'aria-pressed', on ? 'true' : 'false' );
-			focusBtn.querySelector( '.fw-crm-side__text' ).textContent = on ? focusBtn.dataset.on : focusBtn.dataset.off;
-
-			var body = new FormData();
-			body.append( 'action', 'fw_crm_focus' );
-			body.append( '_ajax_nonce', app.dataset.focusNonce );
-			body.append( 'on', on ? '1' : '0' );
-			fetch( app.dataset.ajax, { method: 'POST', body: body, credentials: 'same-origin' } ).catch( function () {} );
-		} );
-	}
-
-	/* Small screens: the sidebar slides in from the left. */
-	var menuBtn = app.querySelector( '.fw-crm-top__menu' );
-	function setMenu( open ) {
-		app.classList.toggle( 'is-menu-open', open );
-		if ( menuBtn ) {
-			menuBtn.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
-		}
-	}
-	if ( menuBtn ) {
-		menuBtn.addEventListener( 'click', function ( e ) {
-			e.stopPropagation();
-			setMenu( ! app.classList.contains( 'is-menu-open' ) );
-		} );
 	}
 
 	/* The New menu closes on an outside click or Escape. */
@@ -50,9 +20,6 @@
 		if ( newMenu && newMenu.open && ! newMenu.contains( e.target ) ) {
 			newMenu.open = false;
 		}
-		if ( app.classList.contains( 'is-menu-open' ) && ! e.target.closest( '.fw-crm-side' ) ) {
-			setMenu( false );
-		}
 	} );
 
 	document.addEventListener( 'keydown', function ( e ) {
@@ -61,7 +28,6 @@
 				newMenu.open = false;
 				newMenu.querySelector( 'summary' ).focus();
 			}
-			setMenu( false );
 			return;
 		}
 		/* "/" jumps to search, unless the person is typing somewhere. */

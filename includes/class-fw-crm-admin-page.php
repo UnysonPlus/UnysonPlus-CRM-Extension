@@ -42,7 +42,6 @@ class FW_CRM_Admin_Page {
 		add_filter( 'fw_unysonplus_admin_submenu_order', array( $this, '_filter_submenu_order' ) );
 		add_action( 'wp_ajax_fw_crm_preview', array( $this, '_ajax_preview' ) );
 		add_action( 'admin_post_fw_crm_preview_tab', array( $this, '_action_preview_tab' ) );
-		add_action( 'wp_ajax_fw_crm_focus', array( 'FW_CRM_App', '_ajax_focus' ) );
 	}
 
 	/* ---------------------------------------------------------------------- *

@@ -18,42 +18,58 @@
  */
 class FW_CRM_App {
 
-	/** User meta: 1 while the person prefers the CRM without the WordPress menu. */
-	const FOCUS_META = 'fw_crm_focus';
+	/** @var FW_Admin_App|null */
+	protected static $app = null;
 
 	/**
-	 * Hook the body classes and the focus toggle. Called once from the admin page.
+	 * The shell, built once.
+	 *
+	 * The frame — the folded WordPress menu, the sidebar, the top bar, focus
+	 * mode — is the framework's `FW_Admin_App`. What stays in this class is the
+	 * part that is about the CRM: its menu, its top-bar search and New menu, and
+	 * the small shared pieces its screens draw with.
+	 *
+	 * @return FW_Admin_App
+	 */
+	public static function app() {
+		if ( self::$app ) {
+			return self::$app;
+		}
+
+		if ( ! class_exists( 'FW_Admin_App' ) ) {
+			require_once fw_get_framework_directory( '/includes/admin-app/class-fw-admin-app.php' );
+		}
+
+		self::$app = new FW_Admin_App( 'crm', array(
+			'brand'      => array(
+				'label' => __( 'CRM', 'fw' ),
+				'icon'  => 'dashicons-id-alt',
+				'url'   => FW_CRM_Admin_Page::get_page_url( 'home' ),
+			),
+			'page'       => FW_CRM_Admin_Page::PAGE_SLUG,
+			'arg'        => 'tab',
+			'default'    => 'home',
+			'capability' => FW_CRM_Service::capability(),
+			// A callable: which areas exist depends on which modules are on, and
+			// the menu itself is filterable.
+			'nav'        => array( __CLASS__, 'nav_now' ),
+		) );
+
+		return self::$app;
+	}
+
+	/**
+	 * Claim the CRM screen. Called once from the admin page, on `admin_menu`.
 	 *
 	 * @param string $hook_suffix The CRM page's hook suffix.
 	 */
 	public static function init( $hook_suffix ) {
-		add_filter( 'admin_body_class', function ( $classes ) use ( $hook_suffix ) {
-			$screen = get_current_screen();
-			if ( ! $screen || $screen->id !== $hook_suffix ) {
-				return $classes;
-			}
-			$classes .= ' fw-crm-screen folded';
-			if ( self::is_focus() ) {
-				$classes .= ' fw-crm-focus';
-			}
-			return $classes;
-		} );
+		self::app()->attach( $hook_suffix );
 	}
 
-	/** @internal admin-ajax: remember the focus-mode choice. */
-	public static function _ajax_focus() {
-		check_ajax_referer( 'fw_crm_focus' );
-		if ( ! current_user_can( FW_CRM_Service::capability() ) ) {
-			wp_send_json_error( null, 403 );
-		}
-		$on = ! empty( $_POST['on'] ) && '0' !== $_POST['on']; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
-		update_user_meta( get_current_user_id(), self::FOCUS_META, $on ? 1 : 0 );
-		wp_send_json_success( array( 'on' => $on ) );
-	}
-
-	/** @return bool */
+	/** @return bool Whether this person is hiding the WordPress menu on app screens. */
 	public static function is_focus() {
-		return (bool) get_user_meta( get_current_user_id(), self::FOCUS_META, true );
+		return FW_Admin_App::is_focus();
 	}
 
 	/* ---------------------------------------------------------------------- *
@@ -160,6 +176,30 @@ class FW_CRM_App {
 	 * ---------------------------------------------------------------------- */
 
 	/**
+	 * The sidebar, with the areas whose module is switched off removed.
+	 *
+	 * `module` is the CRM's own idea, so it is resolved here; `cap` is the
+	 * shell's and is applied by it.
+	 *
+	 * @internal The `nav` callable handed to FW_Admin_App.
+	 *
+	 * @return array
+	 */
+	public static function nav_now() {
+		$nav = self::nav();
+
+		foreach ( $nav as $group_key => $group ) {
+			foreach ( (array) ( $group['items'] ?? array() ) as $slug => $item ) {
+				if ( ! empty( $item['module'] ) && ! FW_CRM_Modules::enabled( $item['module'] ) ) {
+					unset( $nav[ $group_key ]['items'][ $slug ] );
+				}
+			}
+		}
+
+		return $nav;
+	}
+
+	/**
 	 * Open the frame: sidebar, top bar, then the content column (left open).
 	 *
 	 * @param string $view   The active view (sidebar highlight).
@@ -167,141 +207,88 @@ class FW_CRM_App {
 	 * @param string $actions Extra top-bar HTML (already escaped), right of search.
 	 */
 	public static function open( $view, array $crumbs, $actions = '' ) {
-		$base  = FW_CRM_Admin_Page::get_page_url();
+		$last  = count( $crumbs ) - 1;
+		$title = $last >= 0 ? (string) $crumbs[ $last ][0] : '';
+
+		self::app()->open( $view, array(
+			'title'   => $title,
+			'crumbs'  => $last > 0 ? array_slice( $crumbs, 0, $last ) : array(),
+			'search'  => self::search_form(),
+			'actions' => $actions . self::new_menu(),
+			// The content column keeps the CRM's own classes: its screens style
+			// themselves against `.fw-crm-body`, and app.js moves Screen Options
+			// into it on the contacts list.
+			'class'   => 'fw-ext-crm fw-crm-body',
+		) );
+	}
+
+	/**
+	 * The top bar's search across contacts and companies.
+	 *
+	 * @return string
+	 */
+	protected static function search_form() {
 		$query = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-		$focus = self::is_focus();
+		$label = FW_CRM_Modules::enabled( 'companies' )
+			? __( 'Search contacts and companies', 'fw' )
+			: __( 'Search contacts', 'fw' );
+
+		ob_start();
 		?>
-		<div class="fw-crm-app" id="fw-crm-app"
-		     data-ajax="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>"
-		     data-focus-nonce="<?php echo esc_attr( wp_create_nonce( 'fw_crm_focus' ) ); ?>">
-
-			<nav class="fw-crm-side" id="fw-crm-side" aria-label="<?php esc_attr_e( 'CRM', 'fw' ); ?>">
-				<a class="fw-crm-side__brand" href="<?php echo esc_url( FW_CRM_Admin_Page::get_page_url( 'home' ) ); ?>">
-					<span class="fw-crm-side__mark" aria-hidden="true">
-						<span class="dashicons dashicons-id-alt"></span>
-					</span>
-					<span class="fw-crm-side__name"><?php esc_html_e( 'CRM', 'fw' ); ?></span>
-				</a>
-
-				<div class="fw-crm-side__groups">
-					<?php
-					foreach ( self::nav() as $group_key => $group ) :
-						$group['items'] = array_filter( (array) $group['items'], function ( $item ) {
-							return ( empty( $item['cap'] ) || current_user_can( $item['cap'] ) )
-								&& ( empty( $item['module'] ) || FW_CRM_Modules::enabled( $item['module'] ) );
-						} );
-						if ( ! $group['items'] ) {
-							continue;
-						}
-						?>
-						<div class="fw-crm-side__group">
-							<?php if ( '' !== (string) $group['label'] ) : ?>
-								<p class="fw-crm-side__label" id="fw-crm-nav-<?php echo esc_attr( $group_key ); ?>"><?php echo esc_html( $group['label'] ); ?></p>
-							<?php endif; ?>
-							<ul<?php echo '' !== (string) $group['label'] ? ' aria-labelledby="fw-crm-nav-' . esc_attr( $group_key ) . '"' : ''; ?>>
-								<?php foreach ( $group['items'] as $slug => $item ) : ?>
-									<?php $here = $slug === $view; ?>
-									<li>
-										<a class="fw-crm-side__link<?php echo $here ? ' is-active' : ''; ?><?php echo ! empty( $item['soon'] ) ? ' is-soon' : ''; ?>"
-										   href="<?php echo esc_url( ! empty( $item['url'] ) ? $item['url'] : add_query_arg( 'tab', $slug, $base ) ); ?>"
-											<?php echo $here ? 'aria-current="page"' : ''; ?>>
-											<span class="dashicons <?php echo esc_attr( $item['icon'] ); ?>" aria-hidden="true"></span>
-											<span class="fw-crm-side__text"><?php echo esc_html( $item['label'] ); ?></span>
-											<?php if ( ! empty( $item['soon'] ) ) : ?>
-												<span class="fw-crm-side__soon"><?php esc_html_e( 'Soon', 'fw' ); ?></span>
-											<?php endif; ?>
-										</a>
-									</li>
-								<?php endforeach; ?>
-							</ul>
-						</div>
-					<?php endforeach; ?>
-				</div>
-
-				<div class="fw-crm-side__foot">
-					<button type="button" class="fw-crm-side__link fw-crm-focus-toggle" aria-pressed="<?php echo $focus ? 'true' : 'false'; ?>"
-					        data-on="<?php esc_attr_e( 'Show the WordPress menu', 'fw' ); ?>"
-					        data-off="<?php esc_attr_e( 'Hide the WordPress menu', 'fw' ); ?>">
-						<span class="dashicons dashicons-editor-contract" aria-hidden="true"></span>
-						<span class="fw-crm-side__text"><?php echo $focus ? esc_html__( 'Show the WordPress menu', 'fw' ) : esc_html__( 'Hide the WordPress menu', 'fw' ); ?></span>
-					</button>
-					<a class="fw-crm-side__link fw-crm-side__back" href="<?php echo esc_url( admin_url() ); ?>">
-						<span class="dashicons dashicons-wordpress" aria-hidden="true"></span>
-						<span class="fw-crm-side__text"><?php esc_html_e( 'Back to WordPress', 'fw' ); ?></span>
-					</a>
-				</div>
-			</nav>
-
-			<div class="fw-crm-main">
-				<header class="fw-crm-top">
-					<button type="button" class="fw-crm-top__menu" aria-controls="fw-crm-side" aria-expanded="false">
-						<span class="dashicons dashicons-menu-alt" aria-hidden="true"></span>
-						<span class="screen-reader-text"><?php esc_html_e( 'CRM menu', 'fw' ); ?></span>
-					</button>
-
-					<div class="fw-crm-top__title">
-						<?php
-						$last = count( $crumbs ) - 1;
-						if ( $last > 0 ) :
-							?>
-							<ol class="fw-crm-crumbs">
-								<?php foreach ( array_slice( $crumbs, 0, $last ) as $crumb ) : ?>
-									<li><a href="<?php echo esc_url( $crumb[1] ); ?>"><?php echo esc_html( $crumb[0] ); ?></a></li>
-								<?php endforeach; ?>
-							</ol>
-						<?php endif; ?>
-						<h1><?php echo esc_html( $crumbs[ $last ][0] ); ?></h1>
-					</div>
-
-					<form class="fw-crm-search" role="search" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
-						<input type="hidden" name="page" value="<?php echo esc_attr( FW_CRM_Admin_Page::PAGE_SLUG ); ?>" />
-						<input type="hidden" name="tab" value="search" />
-						<label class="screen-reader-text" for="fw-crm-q"><?php echo FW_CRM_Modules::enabled( 'companies' ) ? esc_html__( 'Search contacts and companies', 'fw' ) : esc_html__( 'Search contacts', 'fw' ); ?></label>
-						<span class="dashicons dashicons-search" aria-hidden="true"></span>
-						<input type="search" id="fw-crm-q" name="q" value="<?php echo esc_attr( $query ); ?>"
-						       placeholder="<?php echo FW_CRM_Modules::enabled( 'companies' ) ? esc_attr__( 'Search contacts and companies', 'fw' ) : esc_attr__( 'Search contacts', 'fw' ); ?>" autocomplete="off" />
-						<kbd aria-hidden="true">/</kbd>
-					</form>
-
-					<div class="fw-crm-top__actions">
-						<?php echo $actions; // phpcs:ignore WordPress.Security.EscapeOutput -- escaped by the caller. ?>
-						<details class="fw-crm-new">
-							<summary class="button button-primary">
-								<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
-								<?php esc_html_e( 'New', 'fw' ); ?>
-							</summary>
-							<ul class="fw-crm-new__menu">
-								<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'subscribers', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><?php esc_html_e( 'Contact', 'fw' ); ?></a></li>
-								<?php if ( FW_CRM_Modules::enabled( 'companies' ) ) : ?>
-									<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'companies', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-building" aria-hidden="true"></span><?php esc_html_e( 'Company', 'fw' ); ?></a></li>
-								<?php endif; ?>
-								<?php if ( class_exists( 'FW_CRM_Deals' ) ) : ?>
-									<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'deals', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-money-alt" aria-hidden="true"></span><?php esc_html_e( 'Deal', 'fw' ); ?></a></li>
-								<?php endif; ?>
-								<li><a href="<?php echo esc_url( add_query_arg( 'tab', 'tasks', $base ) ); ?>"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><?php esc_html_e( 'Task', 'fw' ); ?></a></li>
-								<?php if ( FW_CRM_Capabilities::can_manage() ) : ?>
-									<?php if ( FW_CRM_Modules::enabled( 'email' ) ) : ?>
-										<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'campaigns', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><?php esc_html_e( 'Email campaign', 'fw' ); ?></a></li>
-									<?php endif; ?>
-									<li><a href="<?php echo esc_url( add_query_arg( 'tab', 'tools', $base ) ); ?>"><span class="dashicons dashicons-database-import" aria-hidden="true"></span><?php esc_html_e( 'Import from CSV', 'fw' ); ?></a></li>
-								<?php endif; ?>
-							</ul>
-						</details>
-					</div>
-				</header>
-
-				<div class="wrap fw-ext-crm fw-crm-body">
-					<hr class="wp-header-end" />
+		<form class="fw-crm-search" role="search" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>">
+			<input type="hidden" name="page" value="<?php echo esc_attr( FW_CRM_Admin_Page::PAGE_SLUG ); ?>" />
+			<input type="hidden" name="tab" value="search" />
+			<label class="screen-reader-text" for="fw-crm-q"><?php echo esc_html( $label ); ?></label>
+			<span class="dashicons dashicons-search" aria-hidden="true"></span>
+			<input type="search" id="fw-crm-q" name="q" value="<?php echo esc_attr( $query ); ?>"
+			       placeholder="<?php echo esc_attr( $label ); ?>" autocomplete="off" />
+			<kbd aria-hidden="true">/</kbd>
+		</form>
 		<?php
+
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * The top bar's "New" menu.
+	 *
+	 * @return string
+	 */
+	protected static function new_menu() {
+		$base = FW_CRM_Admin_Page::get_page_url();
+
+		ob_start();
+		?>
+		<details class="fw-crm-new">
+			<summary class="button button-primary">
+				<span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
+				<?php esc_html_e( 'New', 'fw' ); ?>
+			</summary>
+			<ul class="fw-crm-new__menu">
+				<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'subscribers', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><?php esc_html_e( 'Contact', 'fw' ); ?></a></li>
+				<?php if ( FW_CRM_Modules::enabled( 'companies' ) ) : ?>
+					<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'companies', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-building" aria-hidden="true"></span><?php esc_html_e( 'Company', 'fw' ); ?></a></li>
+				<?php endif; ?>
+				<?php if ( class_exists( 'FW_CRM_Deals' ) ) : ?>
+					<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'deals', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-money-alt" aria-hidden="true"></span><?php esc_html_e( 'Deal', 'fw' ); ?></a></li>
+				<?php endif; ?>
+				<li><a href="<?php echo esc_url( add_query_arg( 'tab', 'tasks', $base ) ); ?>"><span class="dashicons dashicons-yes-alt" aria-hidden="true"></span><?php esc_html_e( 'Task', 'fw' ); ?></a></li>
+				<?php if ( FW_CRM_Capabilities::can_manage() ) : ?>
+					<?php if ( FW_CRM_Modules::enabled( 'email' ) ) : ?>
+						<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'campaigns', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-email-alt" aria-hidden="true"></span><?php esc_html_e( 'Email campaign', 'fw' ); ?></a></li>
+					<?php endif; ?>
+					<li><a href="<?php echo esc_url( add_query_arg( 'tab', 'tools', $base ) ); ?>"><span class="dashicons dashicons-database-import" aria-hidden="true"></span><?php esc_html_e( 'Import from CSV', 'fw' ); ?></a></li>
+				<?php endif; ?>
+			</ul>
+		</details>
+		<?php
+
+		return (string) ob_get_clean();
 	}
 
 	/** Close the frame opened by open(). */
 	public static function close() {
-		?>
-				</div>
-			</div>
-		</div>
-		<?php
+		self::app()->close();
 	}
 
 	/* ---------------------------------------------------------------------- *
