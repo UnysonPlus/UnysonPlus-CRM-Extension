@@ -315,6 +315,17 @@ class FW_CRM_Email_Templates {
 	 *
 	 * @return array
 	 */
+	/**
+	 * A starter-shaped block list as the builder's stored value (what save_campaign()'s body_json takes).
+	 *
+	 * @param array $blocks
+	 *
+	 * @return array
+	 */
+	public static function to_value( array $blocks ) {
+		return FW_CRM_Email_Compiler::to_option_value( self::blocks( $blocks ) );
+	}
+
 	private static function blocks( array $blocks ) {
 		foreach ( $blocks as &$block ) {
 			if ( ! isset( $block['width'] ) ) {

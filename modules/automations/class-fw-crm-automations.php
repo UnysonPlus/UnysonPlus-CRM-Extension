@@ -495,6 +495,67 @@ class FW_CRM_Automations {
 	}
 
 	/* ---------------------------------------------------------------------- *
+	 * Recipes
+	 * ---------------------------------------------------------------------- */
+
+	/** @return array[] Recipes from recipes/index.json, each with `available` (its trigger and actions exist here). */
+	public static function recipes() {
+		$file = dirname( __FILE__ ) . '/recipes/index.json';
+		$data = is_readable( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : array(); // phpcs:ignore WordPress.WP.AlternativeFunctions
+		$out  = array();
+		foreach ( (array) ( $data['recipes'] ?? array() ) as $r ) {
+			$r['available'] = isset( self::triggers()[ $r['trigger_type'] ] ) && self::steps_available( (array) $r['steps'] );
+			$out[]          = $r;
+		}
+		/** Filters the ready-made automations offered on the Automations screen. */
+		return (array) apply_filters( 'unysonplus_crm_automation_recipes', $out );
+	}
+
+	/**
+	 * @param string $id
+	 *
+	 * @return array|null Ready to pass to save(), or null when unknown or not available here.
+	 */
+	public static function recipe( $id ) {
+		foreach ( self::recipes() as $r ) {
+			if ( $r['id'] === $id && $r['available'] ) {
+				return array(
+					'title'            => $r['title'],
+					'trigger_type'     => $r['trigger_type'],
+					'trigger_settings' => (array) $r['trigger_settings'],
+					'settings'         => (array) $r['settings'],
+					'steps'            => (array) $r['steps'],
+				);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Do every action and goal in these steps exist here?
+	 *
+	 * @param array $steps
+	 *
+	 * @return bool
+	 */
+	public static function steps_available( array $steps ) {
+		foreach ( $steps as $s ) {
+			if ( 'action' === ( $s['type'] ?? '' ) && ! isset( self::actions()[ $s['action'] ?? '' ] ) ) {
+				return false;
+			}
+			if ( 'goal' === ( $s['type'] ?? '' ) && ! isset( self::triggers()[ $s['settings']['trigger'] ?? '' ] ) ) {
+				return false;
+			}
+			foreach ( (array) ( $s['branches'] ?? array() ) as $b ) {
+				if ( ! self::steps_available( (array) $b ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	/* ---------------------------------------------------------------------- *
 	 * Step tree helpers
 	 * ---------------------------------------------------------------------- */
 

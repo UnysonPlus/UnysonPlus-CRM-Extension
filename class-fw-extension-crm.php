@@ -97,6 +97,7 @@ class FW_Extension_CRM extends FW_Extension {
 			require_once $pipeline_dir . 'class-fw-crm-reports.php';
 			require_once $pipeline_dir . 'class-fw-crm-products.php';
 			FW_CRM_Products::init();
+			require_once $pipeline_dir . 'ai-abilities.php';
 		}
 		// Module: support cases (status, priority, owner; the conversation on the timeline).
 		if ( FW_CRM_Modules::enabled( 'cases' ) ) {
@@ -131,6 +132,24 @@ class FW_Extension_CRM extends FW_Extension {
 		FW_CRM_Channels::init();
 		require_once $dir . 'class-fw-crm-events-store.php';
 		FW_CRM_Events_Store::init();
+		// The extension API (fw_crm()): the events catalogue, integrations, purchase summaries,
+		// WordPress users, custom objects and dashboard widgets.
+		require_once $dir . 'class-fw-crm-events.php';
+		require_once $dir . 'class-fw-crm-commerce.php';
+		require_once $dir . 'class-fw-crm-users.php';
+		require_once $dir . 'class-fw-crm-objects.php';
+		require_once $dir . 'class-fw-crm-integrations.php';
+		require_once $dir . 'class-fw-crm-api.php';
+		FW_CRM_Events::init();
+		FW_CRM_Commerce::init();
+		FW_CRM_Users::init();
+		FW_CRM_Objects::init();
+		FW_CRM_Integrations::init();
+		// Module: WooCommerce (only offered while WooCommerce is active).
+		if ( FW_CRM_Modules::enabled( 'woocommerce' ) ) {
+			require_once dirname( __FILE__ ) . '/modules/integrations/class-fw-crm-woocommerce.php';
+			FW_CRM_WooCommerce::init();
+		}
 		// Module: lead scoring and site activity.
 		if ( FW_CRM_Modules::enabled( 'scoring' ) ) {
 			$score_dir = dirname( __FILE__ ) . '/modules/scoring/';
@@ -138,6 +157,7 @@ class FW_Extension_CRM extends FW_Extension {
 			require_once $score_dir . 'class-fw-crm-site-activity.php';
 			FW_CRM_Scoring::init();
 			FW_CRM_Site_Activity::init();
+			require_once $score_dir . 'ai-abilities.php';
 			if ( is_admin() ) {
 				require_once $score_dir . 'class-fw-crm-admin-scoring.php';
 				FW_CRM_Admin_Scoring::init();
@@ -158,6 +178,7 @@ class FW_Extension_CRM extends FW_Extension {
 			require_once $auto_dir . 'actions/class-fw-crm-action-assign-owner.php';
 			require_once $auto_dir . 'actions/class-fw-crm-action-split.php';
 			FW_CRM_Automations::init();
+			require_once $auto_dir . 'ai-abilities.php';
 		}
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once $dir . 'class-fw-crm-cli.php';
@@ -172,6 +193,7 @@ class FW_Extension_CRM extends FW_Extension {
 			require_once $email_dir . 'class-fw-crm-sender.php';
 			require_once $email_dir . 'class-fw-crm-tracking.php';
 			require_once $email_dir . 'class-fw-crm-campaign-report.php';
+			require_once $email_dir . 'ai-abilities.php';
 		}
 		require_once $dir . 'class-fw-crm-endpoints.php';
 		require_once $dir . 'class-fw-crm-privacy.php';
@@ -275,6 +297,8 @@ class FW_Extension_CRM extends FW_Extension {
 				require_once dirname( __FILE__ ) . '/modules/pipeline/class-fw-crm-admin-products.php';
 				FW_CRM_Admin_Products::init();
 			}
+			require_once $dir . 'admin/class-fw-crm-widgets.php';
+			FW_CRM_Widgets::init();
 			if ( FW_CRM_Modules::enabled( 'automations' ) ) {
 				require_once dirname( __FILE__ ) . '/modules/automations/class-fw-crm-admin-automations.php';
 				FW_CRM_Admin_Automations::init();

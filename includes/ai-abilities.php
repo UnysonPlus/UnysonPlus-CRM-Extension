@@ -70,7 +70,7 @@ if ( ! function_exists( 'fw_ext_crm_ai_register' ) ) :
 
 		fw_ai_register_ability( 'crm-describe', array(
 			'label'       => __( 'Describe the CRM', 'fw' ),
-			'description' => 'The CRM set-up: settings (double opt-in, admin notification, default list, confirmation and welcome emails), lists and tags (slug, title, how many subscribed people each has), saved segments (with a plain description of what they match and how many people match), campaigns (title, subject, status, audience) and the email sender (From name / address, whether a send method is set). Counts only: no subscriber names or emails. Pipeline stages are tags, conventionally titled "Stage: <name>".',
+			'description' => 'The CRM set-up: settings (double opt-in, admin notification, default list, confirmation and welcome emails), lists and tags (slug, title, how many subscribed people each has), saved segments (with a plain description of what they match and how many people match), campaigns (title, subject, status, audience) and the email sender (From name / address, whether a send method is set). Counts only: no subscriber names or emails. Also which CRM modules are switched on: with the Sales pipeline on, use real pipeline stages (crm-pipelines, crm-save-pipeline) rather than "Stage: <name>" tags; with Automations on, set up follow-ups as automations (crm-automations, crm-save-automation) rather than a single welcome email; Lead scoring (crm-scoring) and email senders / post digest (crm-sending, crm-email-templates, crm-campaign-from-template) have their own abilities.',
 			'permission'  => 'manage_options',
 			'readonly'    => true,
 			'execute'     => 'fw_ext_crm_ai_describe',
@@ -187,6 +187,11 @@ if ( ! function_exists( 'fw_ext_crm_ai_register' ) ) :
 				'status'   => (string) $c->status,
 				'audience' => is_array( $audience ) ? $s::describe_filters( $audience ) : '',
 			);
+		}
+
+		$out['modules'] = array();
+		foreach ( FW_CRM_Modules::all() as $mid => $m ) {
+			$out['modules'][ $mid ] = array( 'label' => (string) $m['label'], 'on' => FW_CRM_Modules::enabled( $mid ), 'available' => FW_CRM_Modules::available( $mid ) );
 		}
 
 		$mailer = fw_ext( 'mailer' );

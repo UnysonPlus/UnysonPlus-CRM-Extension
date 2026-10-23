@@ -96,6 +96,10 @@ class FW_CRM_Admin_Modules {
 			<?php endforeach; ?>
 			<p><button type="submit" class="button button-primary"><?php esc_html_e( 'Save modules', 'fw' ); ?></button></p>
 		</form>
+		<?php
+		/** Fires below the module switches (the integrations registry lists connected extensions here). */
+		do_action( 'unysonplus_crm_modules_after' );
+		?>
 		<p class="fw-crm-muted">
 			<?php
 			printf(

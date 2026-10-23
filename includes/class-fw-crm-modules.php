@@ -118,6 +118,17 @@ class FW_CRM_Modules {
 				'group'       => 'workspace',
 				'default'     => false,
 			),
+			'woocommerce'   => array(
+				'label'         => __( 'WooCommerce', 'fw' ),
+				'description'   => __( 'Customers become contacts; orders, refunds and abandoned carts reach the timeline, segments and automations, with each contact\'s orders and total spent.', 'fw' ),
+				'icon'          => 'dashicons-cart',
+				'group'         => 'connect',
+				'default'       => false,
+				'available'     => function () {
+					return class_exists( 'WooCommerce' );
+				},
+				'requires_text' => __( 'Needs the WooCommerce plugin.', 'fw' ),
+			),
 			'webhooks'      => array(
 				'label'       => __( 'Webhooks', 'fw' ),
 				'description' => __( 'Send CRM events (a new contact, a won deal, an unsubscribe) to another app the moment they happen, signed and retried.', 'fw' ),

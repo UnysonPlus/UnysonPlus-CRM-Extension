@@ -26,7 +26,7 @@
 class FW_CRM_Installer {
 
 	/** Bump when the schema below changes. */
-	const DB_VERSION = '2.14.0';
+	const DB_VERSION = '2.15.0';
 
 	const DB_VERSION_OPTION = 'fw_ext_crm_db_version';
 
@@ -289,6 +289,8 @@ class FW_CRM_Installer {
 		$cevents   = self::table( 'contact_events' );
 		$cscores   = self::table( 'contact_scores' );
 		$slog      = self::table( 'score_log' );
+		$commerce  = self::table( 'commerce_summaries' );
+		$objects   = self::table( 'objects' );
 
 		$sql[] = "CREATE TABLE {$companies} (
 	id bigint(20) unsigned NOT NULL auto_increment,
@@ -618,6 +620,42 @@ class FW_CRM_Installer {
 	KEY contact_created (contact_id,created_at)
 ) {$collate};";
 
+		// Purchase summaries (2.15.0): one row per contact per store or membership provider.
+		$sql[] = "CREATE TABLE {$commerce} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	provider varchar(40) NOT NULL default '',
+	orders int unsigned NOT NULL default 0,
+	total decimal(14,2) NOT NULL default 0,
+	currency char(3) NOT NULL default '',
+	products text,
+	plan varchar(190) NOT NULL default '',
+	plan_status varchar(30) NOT NULL default '',
+	first_order_at datetime default NULL,
+	last_order_at datetime default NULL,
+	updated_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	UNIQUE KEY contact_provider (contact_id,provider),
+	KEY provider_total (provider,total)
+) {$collate};";
+
+		// Custom objects (2.15.0): records of types other extensions register; fields, relations
+		// and the timeline use the shared tables with object_type = the type.
+		$sql[] = "CREATE TABLE {$objects} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	type varchar(40) NOT NULL default '',
+	title varchar(190) NOT NULL default '',
+	status varchar(30) NOT NULL default '',
+	owner_id bigint(20) unsigned NOT NULL default 0,
+	data longtext,
+	deleted_at datetime default NULL,
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	updated_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	KEY type_status (type,status),
+	KEY owner_id (owner_id)
+) {$collate};";
+
 		// Support cases (2.11.0). Statuses and priorities are fixed slugs (FW_CRM_Cases); the
 		// conversation lives on the timeline (activity, object_type "case"), not in this row.
 		$sql[] = "CREATE TABLE {$cases} (
@@ -804,7 +842,7 @@ class FW_CRM_Installer {
 		delete_option( 'fw_crm_inbound_seen' );
 		global $wpdb;
 
-		foreach ( array( 'campaign_queue', 'campaigns', 'subscriber_pivot', 'subscriber_meta', 'segments', 'subscribers', 'lists', 'companies', 'relations', 'activity', 'consent', 'field_values', 'audit', 'imports', 'import_rows', 'pipelines', 'pipeline_stages', 'deals', 'tasks', 'products', 'deal_items', 'email_links', 'email_events', 'webhooks', 'webhook_deliveries', 'cases', 'automations', 'automation_versions', 'automation_runs', 'automation_log', 'contact_events', 'contact_scores', 'score_log' ) as $table ) {
+		foreach ( array( 'campaign_queue', 'campaigns', 'subscriber_pivot', 'subscriber_meta', 'segments', 'subscribers', 'lists', 'companies', 'relations', 'activity', 'consent', 'field_values', 'audit', 'imports', 'import_rows', 'pipelines', 'pipeline_stages', 'deals', 'tasks', 'products', 'deal_items', 'email_links', 'email_events', 'webhooks', 'webhook_deliveries', 'cases', 'automations', 'automation_versions', 'automation_runs', 'automation_log', 'contact_events', 'contact_scores', 'score_log', 'commerce_summaries', 'objects' ) as $table ) {
 			$name = self::table( $table );
 			$wpdb->query( "DROP TABLE IF EXISTS {$name}" ); // phpcs:ignore WordPress.DB.PreparedSQL
 		}

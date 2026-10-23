@@ -245,6 +245,9 @@ class FW_CRM_Merge {
 		$scores = FW_CRM_Installer::table( 'contact_scores' );
 		$wpdb->query( $wpdb->prepare( "INSERT INTO {$scores} (contact_id, score_key, points, updated_at) SELECT %d, score_key, points, updated_at FROM {$scores} WHERE contact_id = %d ON DUPLICATE KEY UPDATE points = {$scores}.points + VALUES(points)", $k, $o ) ); // phpcs:ignore WordPress.DB.PreparedSQL
 		$wpdb->delete( $scores, array( 'contact_id' => $o ) );
+		// Purchase summaries: the kept contact's row per provider wins; the other's fills a provider it lacks.
+		$wpdb->query( $wpdb->prepare( 'UPDATE IGNORE ' . FW_CRM_Installer::table( 'commerce_summaries' ) . ' SET contact_id = %d WHERE contact_id = %d', $k, $o ) ); // phpcs:ignore WordPress.DB.PreparedSQL
+		$wpdb->delete( FW_CRM_Installer::table( 'commerce_summaries' ), array( 'contact_id' => $o ) );
 		$wpdb->update( FW_CRM_Installer::table( 'tasks' ), array( 'object_id' => $k ), array( 'object_type' => 'contact', 'object_id' => $o ) );
 		// Custom fields: the kept contact's values win; the other fills the gaps.
 		$wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$t['values']} (object_type, object_id, field_key, value, value_num, value_date) SELECT 'contact', %d, field_key, value, value_num, value_date FROM {$t['values']} WHERE object_type = 'contact' AND object_id = %d", $k, $o ) ); // phpcs:ignore WordPress.DB.PreparedSQL

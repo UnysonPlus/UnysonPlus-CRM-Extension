@@ -164,17 +164,9 @@ class FW_CRM_Admin_Automations {
 	 * Recipes
 	 * ---------------------------------------------------------------------- */
 
-	/** @return array[] Recipes whose trigger and actions exist on this site. */
+	/** @return array[] Recipes, each with `available`. */
 	public static function recipes() {
-		$file = dirname( __FILE__ ) . '/recipes/index.json';
-		$data = is_readable( $file ) ? json_decode( (string) file_get_contents( $file ), true ) : array(); // phpcs:ignore WordPress.WP.AlternativeFunctions
-		$out  = array();
-		foreach ( (array) ( $data['recipes'] ?? array() ) as $r ) {
-			$r['available'] = isset( FW_CRM_Automations::triggers()[ $r['trigger_type'] ] ) && self::steps_available( (array) $r['steps'] );
-			$out[]          = $r;
-		}
-		/** Filters the ready-made automations offered on the Automations screen. */
-		return (array) apply_filters( 'unysonplus_crm_automation_recipes', $out );
+		return FW_CRM_Automations::recipes();
 	}
 
 	/**
@@ -183,36 +175,7 @@ class FW_CRM_Admin_Automations {
 	 * @return array|null Ready to pass to FW_CRM_Automations::save().
 	 */
 	private static function recipe( $id ) {
-		foreach ( self::recipes() as $r ) {
-			if ( $r['id'] === $id && $r['available'] ) {
-				return array(
-					'title'            => $r['title'],
-					'trigger_type'     => $r['trigger_type'],
-					'trigger_settings' => (array) $r['trigger_settings'],
-					'settings'         => (array) $r['settings'],
-					'steps'            => (array) $r['steps'],
-				);
-			}
-		}
-		return null;
-	}
-
-	/** @param array $steps */
-	private static function steps_available( array $steps ) {
-		foreach ( $steps as $s ) {
-			if ( 'action' === ( $s['type'] ?? '' ) && ! isset( FW_CRM_Automations::actions()[ $s['action'] ?? '' ] ) ) {
-				return false;
-			}
-			if ( 'goal' === ( $s['type'] ?? '' ) && ! isset( FW_CRM_Automations::triggers()[ $s['settings']['trigger'] ?? '' ] ) ) {
-				return false;
-			}
-			foreach ( (array) ( $s['branches'] ?? array() ) as $b ) {
-				if ( ! self::steps_available( (array) $b ) ) {
-					return false;
-				}
-			}
-		}
-		return true;
+		return FW_CRM_Automations::recipe( $id );
 	}
 
 	/* ---------------------------------------------------------------------- *
