@@ -98,6 +98,13 @@ class FW_Extension_CRM extends FW_Extension {
 			require_once $pipeline_dir . 'class-fw-crm-products.php';
 			FW_CRM_Products::init();
 		}
+		// Module: support cases (status, priority, owner; the conversation on the timeline).
+		if ( FW_CRM_Modules::enabled( 'cases' ) ) {
+			$cases_dir = dirname( __FILE__ ) . '/modules/cases/';
+			require_once $cases_dir . 'class-fw-crm-cases.php';
+			require_once $cases_dir . 'class-fw-crm-cases-intake.php';
+			FW_CRM_Cases_Intake::init();
+		}
 		require_once $dir . 'providers/class-fw-crm-provider.php';
 		require_once $dir . 'providers/class-fw-crm-provider-local.php';
 		// Module: email marketing (campaigns, the email builder, the batched sender).
@@ -113,6 +120,54 @@ class FW_Extension_CRM extends FW_Extension {
 		require_once $dir . 'class-fw-crm-service.php';
 		require_once $dir . 'class-fw-crm-capture.php';
 		require_once $dir . 'class-fw-crm-mail.php';
+		// Sender profiles and email services: campaigns are marketing mail, conversations and
+		// case replies transactional, so they load with either module.
+		if ( $email || $conversations ) {
+			require_once $email_dir . 'services/class-fw-crm-mail-service.php';
+			require_once $email_dir . 'class-fw-crm-senders.php';
+			FW_CRM_Senders::init();
+		}
+		require_once $dir . 'class-fw-crm-channels.php';
+		FW_CRM_Channels::init();
+		require_once $dir . 'class-fw-crm-events-store.php';
+		FW_CRM_Events_Store::init();
+		// Module: lead scoring and site activity.
+		if ( FW_CRM_Modules::enabled( 'scoring' ) ) {
+			$score_dir = dirname( __FILE__ ) . '/modules/scoring/';
+			require_once $score_dir . 'class-fw-crm-scoring.php';
+			require_once $score_dir . 'class-fw-crm-site-activity.php';
+			FW_CRM_Scoring::init();
+			FW_CRM_Site_Activity::init();
+			if ( is_admin() ) {
+				require_once $score_dir . 'class-fw-crm-admin-scoring.php';
+				FW_CRM_Admin_Scoring::init();
+			}
+		}
+		// Module: automations (the engine, its triggers and actions, the runner and its health check).
+		if ( FW_CRM_Modules::enabled( 'automations' ) ) {
+			$auto_dir = dirname( __FILE__ ) . '/modules/automations/';
+			require_once $auto_dir . 'class-fw-crm-automations.php';
+			require_once $auto_dir . 'class-fw-crm-conditions.php';
+			require_once $auto_dir . 'class-fw-crm-goals.php';
+			require_once $auto_dir . 'class-fw-crm-automation-guard.php';
+			require_once $auto_dir . 'class-fw-crm-run-log.php';
+			require_once $auto_dir . 'class-fw-crm-runner.php';
+			require_once $auto_dir . 'class-fw-crm-cron-check.php';
+			require_once $auto_dir . 'triggers/class-fw-crm-trigger.php';
+			require_once $auto_dir . 'actions/class-fw-crm-action.php';
+			require_once $auto_dir . 'actions/class-fw-crm-action-assign-owner.php';
+			require_once $auto_dir . 'actions/class-fw-crm-action-split.php';
+			FW_CRM_Automations::init();
+		}
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			require_once $dir . 'class-fw-crm-cli.php';
+		}
+		if ( $email ) {
+			require_once $email_dir . 'class-fw-crm-smart-links.php';
+			require_once $email_dir . 'class-fw-crm-digest.php';
+			FW_CRM_Smart_Links::init();
+			FW_CRM_Digest::init();
+		}
 		if ( $email ) {
 			require_once $email_dir . 'class-fw-crm-sender.php';
 			require_once $email_dir . 'class-fw-crm-tracking.php';
@@ -196,6 +251,10 @@ class FW_Extension_CRM extends FW_Extension {
 				require_once $dir . 'admin/class-fw-crm-admin-email.php';
 				FW_CRM_Admin_Email::init();
 			}
+			if ( $email || $conversations ) {
+				require_once $email_dir . 'class-fw-crm-admin-sending.php';
+				FW_CRM_Admin_Sending::init();
+			}
 			if ( $inbound ) {
 				require_once $dir . 'admin/class-fw-crm-admin-inbound.php';
 				FW_CRM_Admin_Inbound::init();
@@ -215,6 +274,14 @@ class FW_Extension_CRM extends FW_Extension {
 				FW_CRM_Admin_Reports::init();
 				require_once dirname( __FILE__ ) . '/modules/pipeline/class-fw-crm-admin-products.php';
 				FW_CRM_Admin_Products::init();
+			}
+			if ( FW_CRM_Modules::enabled( 'automations' ) ) {
+				require_once dirname( __FILE__ ) . '/modules/automations/class-fw-crm-admin-automations.php';
+				FW_CRM_Admin_Automations::init();
+			}
+			if ( FW_CRM_Modules::enabled( 'cases' ) ) {
+				require_once dirname( __FILE__ ) . '/modules/cases/class-fw-crm-admin-cases.php';
+				FW_CRM_Admin_Cases::init();
 			}
 			FW_CRM_Admin_Segments::init();
 			FW_CRM_Admin_Import::init();

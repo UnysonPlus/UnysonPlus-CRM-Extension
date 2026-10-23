@@ -111,7 +111,7 @@ class FW_CRM_Form_Map {
 	 *
 	 * @return string
 	 */
-	public static function auto_target( array $item, array $custom = null ) {
+	public static function auto_target( array $item, ?array $custom = null ) {
 		$type  = (string) ( $item['type'] ?? '' );
 		$label = strtolower( trim( wp_strip_all_tags( (string) ( $item['options']['label'] ?? '' ) ) ) );
 		if ( in_array( $type, array( 'email', 'consent' ), true ) || in_array( $type, self::SKIP_TYPES, true ) ) {

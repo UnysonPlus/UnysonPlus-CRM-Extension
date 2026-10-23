@@ -92,6 +92,7 @@ class FW_CRM_App {
 					'subscribers' => array( 'label' => __( 'Contacts', 'fw' ), 'icon' => 'dashicons-groups' ),
 					'companies'   => array( 'label' => __( 'Companies', 'fw' ), 'icon' => 'dashicons-building', 'module' => 'companies' ),
 					'deals'       => array( 'label' => __( 'Deals', 'fw' ), 'icon' => 'dashicons-money-alt', 'module' => 'pipeline' ),
+					'cases'       => array( 'label' => __( 'Cases', 'fw' ), 'icon' => 'dashicons-sos', 'module' => 'cases' ),
 					'tasks'       => array( 'label' => __( 'Tasks', 'fw' ), 'icon' => 'dashicons-yes-alt' ),
 					'calendar'    => array( 'label' => __( 'Calendar', 'fw' ), 'icon' => 'dashicons-calendar-alt', 'module' => 'calendar' ),
 				),
@@ -101,6 +102,8 @@ class FW_CRM_App {
 				'items' => array(
 					'campaigns' => array( 'label' => __( 'Campaigns', 'fw' ), 'icon' => 'dashicons-email-alt', 'cap' => FW_CRM_Capabilities::MANAGE, 'module' => 'email' ),
 					'lists'     => array( 'label' => __( 'Lists & segments', 'fw' ), 'icon' => 'dashicons-tag', 'cap' => FW_CRM_Capabilities::MANAGE ),
+					'scoring'     => array( 'label' => __( 'Lead scoring', 'fw' ), 'icon' => 'dashicons-star-filled', 'cap' => FW_CRM_Capabilities::MANAGE, 'module' => 'scoring' ),
+					'automations' => array( 'label' => __( 'Automations', 'fw' ), 'icon' => 'dashicons-randomize', 'cap' => FW_CRM_Capabilities::MANAGE, 'module' => 'automations' ),
 				),
 			),
 			'insights'  => array(

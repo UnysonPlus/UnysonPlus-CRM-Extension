@@ -47,6 +47,9 @@ class FW_CRM_Forms_Action_Subscribe extends FW_Forms_Action {
 			$create['deal'] = __( 'A deal in the sales pipeline', 'fw' );
 		}
 		$create['task'] = __( 'A task, call or meeting', 'fw' );
+		if ( class_exists( 'FW_CRM_Cases' ) ) {
+			$create['case'] = __( 'A support case', 'fw' );
+		}
 
 		$options = array(
 			'action_crm_contact' => $this->switch_option(
@@ -74,7 +77,7 @@ class FW_CRM_Forms_Action_Subscribe extends FW_Forms_Action {
 				'label'   => __( 'Also create', 'fw' ),
 				'value'   => '',
 				'choices' => $create,
-				'desc'    => __( 'For a booking or quote form: each submission becomes a deal to follow up, or a task or meeting on the date the person chose.', 'fw' ),
+				'desc'    => __( 'For a booking or quote form: each submission becomes a deal to follow up, or a task or meeting on the date the person chose. For a help or support form: a case, with the whole message on it.', 'fw' ),
 			),
 		);
 		if ( class_exists( 'FW_CRM_Pipelines' ) ) {
@@ -281,6 +284,8 @@ class FW_CRM_Forms_Action_Subscribe extends FW_Forms_Action {
 				'body'     => FW_CRM_Form_Map::answers_html( $ctx['fields'], array(), (int) $ctx['entry_id'] ),
 				'actor_id' => 0,
 			) );
+		} elseif ( 'case' === $kind && class_exists( 'FW_CRM_Cases_Intake' ) ) {
+			FW_CRM_Cases_Intake::from_form( $contact_id, $form_title, $ctx, $values, $types );
 		} elseif ( 'task' === $kind ) {
 			$contact = FW_CRM_Subscribers::find( $contact_id );
 			$type    = (string) self::opt( $form, 'action_crm_task_type', 'meeting' );

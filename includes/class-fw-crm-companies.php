@@ -270,6 +270,7 @@ class FW_CRM_Companies {
 		FW_CRM_Fields::delete_for( 'company', $id );
 		FW_CRM_Tasks::delete_for( 'company', $id );
 		$wpdb->update( FW_CRM_Installer::table( 'deals' ), array( 'company_id' => 0 ), array( 'company_id' => (int) $id ) ); // Deals stay.
+		$wpdb->update( FW_CRM_Installer::table( 'cases' ), array( 'company_id' => 0 ), array( 'company_id' => (int) $id ) ); // Cases stay.
 		$wpdb->delete( self::table(), array( 'id' => (int) $id ) );
 
 		/** Fires after a company is deleted for good. */

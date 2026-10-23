@@ -95,14 +95,14 @@ class FW_CRM_Modules {
 				'description' => __( 'Flows that start from a form, a tag, a date or a deal stage and send emails, wait, branch and update records for you.', 'fw' ),
 				'icon'        => 'dashicons-randomize',
 				'group'       => 'marketing',
-				'soon'        => true,
+				'default'     => false,
 			),
 			'scoring'       => array(
 				'label'       => __( 'Lead scoring and site activity', 'fw' ),
 				'description' => __( 'Points for what contacts do, and the pages known contacts read, so the warmest leads come first.', 'fw' ),
 				'icon'        => 'dashicons-star-filled',
 				'group'       => 'marketing',
-				'soon'        => true,
+				'default'     => false,
 			),
 			'audit'         => array(
 				'label'       => __( 'Audit log', 'fw' ),
@@ -113,10 +113,10 @@ class FW_CRM_Modules {
 			),
 			'cases'         => array(
 				'label'       => __( 'Support cases', 'fw' ),
-				'description' => __( 'Questions and problems from customers, each with a status, an owner and the full conversation.', 'fw' ),
+				'description' => __( 'Questions and problems from customers, each with a status, a priority, an owner and the full conversation. Opened by hand, from a form or from an email.', 'fw' ),
 				'icon'        => 'dashicons-sos',
 				'group'       => 'workspace',
-				'soon'        => true,
+				'default'     => false,
 			),
 			'webhooks'      => array(
 				'label'       => __( 'Webhooks', 'fw' ),

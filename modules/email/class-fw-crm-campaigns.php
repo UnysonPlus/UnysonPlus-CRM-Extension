@@ -215,6 +215,10 @@ class FW_CRM_Campaigns {
 			}
 		}
 
+		if ( isset( $data['sender_id'] ) ) {
+			$row['sender_id'] = substr( preg_replace( '/[^a-z0-9]/', '', strtolower( (string) $data['sender_id'] ) ), 0, 20 );
+		}
+
 		return $row;
 	}
 

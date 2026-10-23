@@ -230,6 +230,9 @@ class FW_CRM_Tracking {
 			}
 			self::record_request( 'click', $p[0], $p[1] );
 			// The address came from our own link table, never from the request.
+			if ( class_exists( 'FW_CRM_Smart_Links' ) ) {
+				$url = FW_CRM_Smart_Links::strip( $url );
+			}
 			wp_redirect( $url, 302, 'Unyson+ CRM' ); // phpcs:ignore WordPress.Security.SafeRedirect.wp_redirect_wp_redirect
 			exit;
 		}
@@ -525,6 +528,28 @@ class FW_CRM_Tracking {
 			'contact_id'  => $contact ? (int) $contact->id : 0,
 			'campaign_id' => $row ? (int) $row->campaign_id : 0,
 		);
+	}
+
+	/**
+	 * A bounce, complaint or unsubscribe reported by an email service's webhook.
+	 *
+	 * @param string $type       bounce|soft_bounce|complaint|unsubscribe
+	 * @param string $email
+	 * @param string $message_id The Message-ID the CRM gave the email, when the service passes it back.
+	 * @param string $detail
+	 *
+	 * @return array
+	 */
+	public static function service_report( $type, $email, $message_id, $detail ) {
+		$email = strtolower( trim( (string) $email ) );
+		if ( 'unsubscribe' === $type ) {
+			$c = '' !== $email ? FW_CRM_Subscribers::find_by_email( $email ) : null;
+			if ( $c && 'unsubscribed' !== $c->status ) {
+				FW_CRM_Service::unsubscribe( $c );
+			}
+			return array( 'status' => 'unsubscribe', 'email' => $email, 'contact_id' => $c ? (int) $c->id : 0, 'campaign_id' => 0 );
+		}
+		return self::apply( $type, $email, 'Message-ID: <' . trim( (string) $message_id, '<> ' ) . '>', (string) $detail );
 	}
 
 	/* ---------------------------------------------------------------------- *

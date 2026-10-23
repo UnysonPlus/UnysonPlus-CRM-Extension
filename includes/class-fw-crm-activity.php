@@ -78,6 +78,12 @@ class FW_CRM_Activity {
 			'email_open'   => array( 'label' => __( 'Opened an email', 'fw' ), 'icon' => 'dashicons-visibility' ),
 			'email_click'  => array( 'label' => __( 'Clicked a link', 'fw' ), 'icon' => 'dashicons-admin-links' ),
 			'call'         => array( 'label' => __( 'Call', 'fw' ), 'icon' => 'dashicons-phone' ),
+			'case'         => array( 'label' => __( 'Case', 'fw' ), 'icon' => 'dashicons-sos' ),
+			'message'      => array( 'label' => __( 'Message', 'fw' ), 'icon' => 'dashicons-format-chat' ),
+			'automation'   => array( 'label' => __( 'Automation', 'fw' ), 'icon' => 'dashicons-randomize' ),
+			'visit'        => array( 'label' => __( 'Visited the site', 'fw' ), 'icon' => 'dashicons-admin-site-alt3' ),
+			'score'        => array( 'label' => __( 'Score', 'fw' ), 'icon' => 'dashicons-star-filled' ),
+			'priority'     => array( 'label' => __( 'Priority', 'fw' ), 'icon' => 'dashicons-warning' ),
 		);
 
 		/** Filters the CRM timeline entry types: type => { label, icon (a dashicons class) }. */
@@ -130,6 +136,8 @@ class FW_CRM_Activity {
 			$wpdb->update( FW_CRM_Installer::table( 'companies' ), array( 'last_activity_at' => $now ), array( 'id' => (int) $object_id ) );
 		} elseif ( 'deal' === $object_type ) {
 			$wpdb->update( FW_CRM_Installer::table( 'deals' ), array( 'last_activity_at' => $now ), array( 'id' => (int) $object_id ) );
+		} elseif ( 'case' === $object_type && class_exists( 'FW_CRM_Cases' ) ) {
+			$wpdb->update( FW_CRM_Installer::table( 'cases' ), array( 'last_activity_at' => $now ), array( 'id' => (int) $object_id ) );
 		}
 
 		/** Fires after a timeline entry is written. */

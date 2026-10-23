@@ -1,0 +1,387 @@
+{
+  "version": 1,
+  "recipes": [
+    {
+      "id": "welcome-series",
+      "title": "Welcome series",
+      "description": "Three emails over a week for every new subscriber: a welcome, your best content, and an invitation to get in touch.",
+      "trigger_type": "crm.subscribed",
+      "trigger_settings": {},
+      "settings": {
+        "reentry": "once",
+        "exit": {
+          "match": "any",
+          "rules": [
+            {
+              "field": "status",
+              "op": "is_not",
+              "value": "subscribed"
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "id": "w1",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "Welcome to {{site_name}}, {{first_name}}",
+            "body": "<p>Hi {{first_name}},</p><p>Thanks for subscribing. Here is what to expect from us, and how often.</p>",
+            "purpose": "marketing"
+          }
+        },
+        {
+          "id": "w2",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 3,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "w3",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "Our most popular reads",
+            "body": "<p>Hi {{first_name}},</p><p>These are the pages people find most useful. Start here.</p>",
+            "purpose": "marketing"
+          }
+        },
+        {
+          "id": "w4",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 4,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "w5",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "Anything we can help with?",
+            "body": "<p>Hi {{first_name}},</p><p>If you have a question, just reply to this email: a real person reads every answer.</p>",
+            "purpose": "marketing"
+          }
+        },
+        {
+          "id": "w6",
+          "type": "action",
+          "action": "crm.add_tag",
+          "settings": {
+            "tags": "welcomed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lead-nurture",
+      "title": "Lead nurture",
+      "description": "For a new lead: two helpful emails, then, if they opened either one, a task for the owner to call them. Leaves as soon as they become a customer.",
+      "trigger_type": "crm.tag_added",
+      "trigger_settings": {
+        "tag": "lead"
+      },
+      "settings": {
+        "reentry": "after_finish",
+        "exit": {
+          "match": "any",
+          "rules": [
+            {
+              "field": "lifecycle_stage",
+              "op": "is",
+              "value": "customer"
+            }
+          ]
+        }
+      },
+      "steps": [
+        {
+          "id": "n2",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "A few ideas for you, {{first_name}}",
+            "body": "<p>Hi {{first_name}},</p><p>Thanks for your interest. Here are a few things our customers found useful before deciding.</p>",
+            "purpose": "marketing"
+          }
+        },
+        {
+          "id": "n3",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 4,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "n4",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "How others solved it",
+            "body": "<p>Hi {{first_name}},</p><p>A short story from a customer in a similar spot.</p>",
+            "purpose": "marketing"
+          }
+        },
+        {
+          "id": "n5",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 2,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "n6",
+          "type": "condition",
+          "settings": {
+            "conditions": {
+              "match": "any",
+              "rules": [
+                {
+                  "field": "opened",
+                  "op": "is",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "branches": {
+            "yes": [
+              {
+                "id": "n7",
+                "type": "action",
+                "action": "crm.create_task",
+                "settings": {
+                  "title": "Call {{first_name}}: opened the nurture emails",
+                  "type": "call",
+                  "due_days": 1,
+                  "owner": "owner"
+                }
+              }
+            ],
+            "no": [
+              {
+                "id": "n8",
+                "type": "action",
+                "action": "crm.add_tag",
+                "settings": {
+                  "tags": "cold-lead"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "booking-follow-up",
+      "title": "Quote or booking follow-up",
+      "description": "After a quote or booking form: thank them now, remind the owner the next day, and follow up after three days unless they have already replied.",
+      "trigger_type": "crm.form_submitted",
+      "trigger_settings": {},
+      "settings": {
+        "reentry": "always",
+        "exit": {
+          "match": "any",
+          "rules": []
+        }
+      },
+      "steps": [
+        {
+          "id": "b1",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "We received your request",
+            "body": "<p>Hi {{first_name}},</p><p>Thank you. We will get back to you within one working day.</p>",
+            "purpose": "transactional"
+          }
+        },
+        {
+          "id": "b2",
+          "type": "action",
+          "action": "crm.notify",
+          "settings": {
+            "to": "owner",
+            "subject": "New request from {{first_name}} {{last_name}}",
+            "message": "A new quote or booking request came in."
+          }
+        },
+        {
+          "id": "b3",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 3,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "b4",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "Following up on your request",
+            "body": "<p>Hi {{first_name}},</p><p>Just checking you got our reply. Is there anything else you need to decide?</p>",
+            "purpose": "transactional"
+          }
+        },
+        {
+          "id": "b5",
+          "type": "goal",
+          "settings": {
+            "trigger": "crm.email_replied",
+            "match": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": "re-engagement",
+      "title": "Re-engagement",
+      "description": "For subscribers who have gone quiet: one email asking if they still want to hear from you; if they do not open it within a week, they are tagged inactive.",
+      "trigger_type": "crm.tag_added",
+      "trigger_settings": {
+        "tag": "inactive-90-days"
+      },
+      "settings": {
+        "reentry": "after_finish",
+        "exit": {
+          "match": "any",
+          "rules": []
+        }
+      },
+      "steps": [
+        {
+          "id": "r1",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "Still want to hear from us, {{first_name}}?",
+            "body": "<p>Hi {{first_name}},</p><p>We have not seen you open our emails for a while. If you would still like them, there is nothing to do. If not, you can unsubscribe below.</p>",
+            "purpose": "marketing"
+          }
+        },
+        {
+          "id": "r2",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 7,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "r3",
+          "type": "condition",
+          "settings": {
+            "conditions": {
+              "match": "any",
+              "rules": [
+                {
+                  "field": "opened",
+                  "op": "is",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "branches": {
+            "yes": [
+              {
+                "id": "r4",
+                "type": "action",
+                "action": "crm.remove_tag",
+                "settings": {
+                  "tags": "inactive-90-days"
+                }
+              }
+            ],
+            "no": [
+              {
+                "id": "r5",
+                "type": "action",
+                "action": "crm.add_tag",
+                "settings": {
+                  "tags": "inactive"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "deal-follow-up",
+      "title": "Deal follow-up",
+      "description": "When a deal reaches a stage you choose (a sent proposal, for example): a task for the owner in two days, and a nudge email after a week, skipped if the deal is won first.",
+      "trigger_type": "crm.deal_stage_changed",
+      "trigger_settings": {},
+      "settings": {
+        "reentry": "always",
+        "exit": {
+          "match": "any",
+          "rules": []
+        }
+      },
+      "steps": [
+        {
+          "id": "d1",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 2,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "d2",
+          "type": "action",
+          "action": "crm.create_task",
+          "settings": {
+            "title": "Follow up with {{first_name}} on the proposal",
+            "type": "call",
+            "due_days": 0,
+            "owner": "owner"
+          }
+        },
+        {
+          "id": "d3",
+          "type": "wait",
+          "settings": {
+            "mode": "delay",
+            "amount": 5,
+            "unit": "days"
+          }
+        },
+        {
+          "id": "d4",
+          "type": "action",
+          "action": "crm.send_email",
+          "settings": {
+            "subject": "Any questions about the proposal?",
+            "body": "<p>Hi {{first_name}},</p><p>I wanted to check whether the proposal answers everything. Happy to talk it through.</p>",
+            "purpose": "transactional"
+          }
+        },
+        {
+          "id": "d5",
+          "type": "goal",
+          "settings": {
+            "trigger": "crm.deal_won",
+            "match": {}
+          }
+        }
+      ]
+    }
+  ]
+}

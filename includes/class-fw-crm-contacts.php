@@ -474,6 +474,10 @@ class FW_CRM_Contacts {
 		FW_CRM_Tasks::delete_for( 'contact', $id );
 		global $wpdb;
 		$wpdb->update( FW_CRM_Installer::table( 'deals' ), array( 'contact_id' => 0 ), array( 'contact_id' => (int) $id ) ); // Deals stay.
+		$wpdb->update( FW_CRM_Installer::table( 'cases' ), array( 'contact_id' => 0 ), array( 'contact_id' => (int) $id ) ); // Cases stay.
+		foreach ( array( 'contact_events', 'contact_scores', 'score_log' ) as $t ) {
+			$wpdb->delete( FW_CRM_Installer::table( $t ), array( 'contact_id' => (int) $id ) );
+		}
 		$deleted           = FW_CRM_Subscribers::delete( $id );
 		self::$users_dirty = true;
 		FW_CRM_Subscribers::flush_has_cache();

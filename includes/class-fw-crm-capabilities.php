@@ -171,6 +171,22 @@ class FW_CRM_Capabilities {
 	}
 
 	/**
+	 * May the current person work on this case? Its owner, or anyone who sees everything.
+	 * An unassigned case is open to every CRM user, so a new request is never stuck.
+	 *
+	 * @param object|int $case
+	 *
+	 * @return bool
+	 */
+	public static function can_edit_case( $case ) {
+		if ( self::sees_all() ) {
+			return true;
+		}
+		$row = is_object( $case ) ? $case : ( class_exists( 'FW_CRM_Cases' ) ? FW_CRM_Cases::find( (int) $case ) : null );
+		return $row && ( ! (int) $row->owner_id || (int) $row->owner_id === get_current_user_id() );
+	}
+
+	/**
 	 * May the current person change this task? Their own tasks, tasks on records
 	 * they own, or anything for someone who sees everything.
 	 *

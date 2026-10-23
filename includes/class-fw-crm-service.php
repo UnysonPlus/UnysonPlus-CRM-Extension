@@ -800,6 +800,9 @@ class FW_CRM_Service {
 		if ( isset( $data['max_per_hour'] ) ) {
 			$payload['max_per_hour'] = max( 0, (int) $data['max_per_hour'] );
 		}
+		if ( isset( $data['sender_id'] ) ) {
+			$payload['sender_id'] = preg_replace( '/[^a-z0-9]/', '', strtolower( (string) $data['sender_id'] ) );
+		}
 
 		// Email-builder campaigns keep the BLOCK TREE as the source of truth and
 		// compile it to HTML into `body` right here, on save. That is what keeps

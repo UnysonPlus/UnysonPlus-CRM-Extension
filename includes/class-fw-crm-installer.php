@@ -26,7 +26,7 @@
 class FW_CRM_Installer {
 
 	/** Bump when the schema below changes. */
-	const DB_VERSION = '2.10.0';
+	const DB_VERSION = '2.14.0';
 
 	const DB_VERSION_OPTION = 'fw_ext_crm_db_version';
 
@@ -219,6 +219,7 @@ class FW_CRM_Installer {
 	failed int unsigned NOT NULL default 0,
 	skipped int unsigned NOT NULL default 0,
 	max_per_hour int unsigned NOT NULL default 0,
+	sender_id varchar(20) NOT NULL default '',
 	queue_purged_at datetime default NULL,
 	created_at datetime NOT NULL default '0000-00-00 00:00:00',
 	updated_at datetime NOT NULL default '0000-00-00 00:00:00',
@@ -280,6 +281,14 @@ class FW_CRM_Installer {
 		$links     = self::table( 'email_links' );
 		$events    = self::table( 'email_events' );
 		$items     = self::table( 'deal_items' );
+		$cases     = self::table( 'cases' );
+		$autos     = self::table( 'automations' );
+		$aversions = self::table( 'automation_versions' );
+		$aruns     = self::table( 'automation_runs' );
+		$alog      = self::table( 'automation_log' );
+		$cevents   = self::table( 'contact_events' );
+		$cscores   = self::table( 'contact_scores' );
+		$slog      = self::table( 'score_log' );
 
 		$sql[] = "CREATE TABLE {$companies} (
 	id bigint(20) unsigned NOT NULL auto_increment,
@@ -501,6 +510,140 @@ class FW_CRM_Installer {
 	KEY object (object_type,object_id)
 ) {$collate};";
 
+		// Automations (2.13.0). An automation's steps are versioned: a run keeps the version it
+		// started on, so editing a live automation never breaks people already inside it. One
+		// row per contact per run with a next-run time is the whole engine: a wait of a month
+		// costs nothing until it is due.
+		$sql[] = "CREATE TABLE {$autos} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	title varchar(190) NOT NULL default '',
+	status varchar(10) NOT NULL default 'draft',
+	trigger_type varchar(64) NOT NULL default '',
+	trigger_settings longtext,
+	settings longtext,
+	version int unsigned NOT NULL default 0,
+	created_by bigint(20) unsigned NOT NULL default 0,
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	updated_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	KEY trigger_status (trigger_type,status)
+) {$collate};";
+
+		$sql[] = "CREATE TABLE {$aversions} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	automation_id bigint(20) unsigned NOT NULL default 0,
+	version int unsigned NOT NULL default 0,
+	steps longtext,
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	UNIQUE KEY automation_version (automation_id,version)
+) {$collate};";
+
+		$sql[] = "CREATE TABLE {$aruns} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	automation_id bigint(20) unsigned NOT NULL default 0,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	version int unsigned NOT NULL default 0,
+	status varchar(10) NOT NULL default 'active',
+	step_id varchar(20) NOT NULL default '',
+	next_run_at datetime default NULL,
+	context longtext,
+	dedupe varchar(190) NOT NULL default '',
+	attempts tinyint unsigned NOT NULL default 0,
+	claim_token varchar(32) NOT NULL default '',
+	claimed_at datetime default NULL,
+	last_error varchar(255) NOT NULL default '',
+	is_test tinyint(1) NOT NULL default 0,
+	started_at datetime NOT NULL default '0000-00-00 00:00:00',
+	finished_at datetime default NULL,
+	PRIMARY KEY  (id),
+	KEY due (status,next_run_at),
+	KEY automation_contact (automation_id,contact_id),
+	KEY contact_id (contact_id),
+	KEY dedupe (automation_id,dedupe)
+) {$collate};";
+
+		$sql[] = "CREATE TABLE {$alog} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	run_id bigint(20) unsigned NOT NULL default 0,
+	automation_id bigint(20) unsigned NOT NULL default 0,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	step_id varchar(20) NOT NULL default '',
+	action varchar(64) NOT NULL default '',
+	status varchar(10) NOT NULL default 'ok',
+	message varchar(255) NOT NULL default '',
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	KEY run_id (run_id),
+	KEY automation_created (automation_id,created_at)
+) {$collate};";
+
+		// Contact events (2.14.0): anything a known contact does, from code, the site or email.
+		$sql[] = "CREATE TABLE {$cevents} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	event varchar(64) NOT NULL default '',
+	value varchar(255) NOT NULL default '',
+	url varchar(500) NOT NULL default '',
+	props longtext,
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	KEY contact_event (contact_id,event,created_at),
+	KEY event_created (event,created_at)
+) {$collate};";
+
+		// Lead scores (2.14.0): one row per contact per named score ("default" mirrors subscribers.score).
+		$sql[] = "CREATE TABLE {$cscores} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	score_key varchar(40) NOT NULL default 'default',
+	points int NOT NULL default 0,
+	updated_at datetime NOT NULL default '0000-00-00 00:00:00',
+	decayed_at datetime default NULL,
+	PRIMARY KEY  (id),
+	UNIQUE KEY contact_score (contact_id,score_key),
+	KEY score_points (score_key,points)
+) {$collate};";
+
+		$sql[] = "CREATE TABLE {$slog} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	score_key varchar(40) NOT NULL default 'default',
+	rule_id varchar(20) NOT NULL default '',
+	points int NOT NULL default 0,
+	reason varchar(190) NOT NULL default '',
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	KEY contact_rule (contact_id,rule_id),
+	KEY contact_created (contact_id,created_at)
+) {$collate};";
+
+		// Support cases (2.11.0). Statuses and priorities are fixed slugs (FW_CRM_Cases); the
+		// conversation lives on the timeline (activity, object_type "case"), not in this row.
+		$sql[] = "CREATE TABLE {$cases} (
+	id bigint(20) unsigned NOT NULL auto_increment,
+	title varchar(190) NOT NULL default '',
+	status varchar(10) NOT NULL default 'new',
+	priority varchar(10) NOT NULL default 'normal',
+	owner_id bigint(20) unsigned NOT NULL default 0,
+	contact_id bigint(20) unsigned NOT NULL default 0,
+	company_id bigint(20) unsigned NOT NULL default 0,
+	source varchar(20) NOT NULL default 'manual',
+	due_at datetime default NULL,
+	position int NOT NULL default 0,
+	status_changed_at datetime default NULL,
+	solved_at datetime default NULL,
+	last_activity_at datetime default NULL,
+	created_by bigint(20) unsigned NOT NULL default 0,
+	created_at datetime NOT NULL default '0000-00-00 00:00:00',
+	updated_at datetime NOT NULL default '0000-00-00 00:00:00',
+	PRIMARY KEY  (id),
+	KEY status (status,position),
+	KEY owner_id (owner_id),
+	KEY contact_id (contact_id),
+	KEY company_id (company_id)
+) {$collate};";
+
 		// Products and deal line items (2.7.0). A line item COPIES the name and price, so
 		// changing or deleting a product never rewrites an old deal. `source` is crm (this
 		// table), woo (a WooCommerce product id) or custom (typed on the deal).
@@ -661,7 +804,7 @@ class FW_CRM_Installer {
 		delete_option( 'fw_crm_inbound_seen' );
 		global $wpdb;
 
-		foreach ( array( 'campaign_queue', 'campaigns', 'subscriber_pivot', 'subscriber_meta', 'segments', 'subscribers', 'lists', 'companies', 'relations', 'activity', 'consent', 'field_values', 'audit', 'imports', 'import_rows', 'pipelines', 'pipeline_stages', 'deals', 'tasks', 'products', 'deal_items', 'email_links', 'email_events', 'webhooks', 'webhook_deliveries' ) as $table ) {
+		foreach ( array( 'campaign_queue', 'campaigns', 'subscriber_pivot', 'subscriber_meta', 'segments', 'subscribers', 'lists', 'companies', 'relations', 'activity', 'consent', 'field_values', 'audit', 'imports', 'import_rows', 'pipelines', 'pipeline_stages', 'deals', 'tasks', 'products', 'deal_items', 'email_links', 'email_events', 'webhooks', 'webhook_deliveries', 'cases', 'automations', 'automation_versions', 'automation_runs', 'automation_log', 'contact_events', 'contact_scores', 'score_log' ) as $table ) {
 			$name = self::table( $table );
 			$wpdb->query( "DROP TABLE IF EXISTS {$name}" ); // phpcs:ignore WordPress.DB.PreparedSQL
 		}

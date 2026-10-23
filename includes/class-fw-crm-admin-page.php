@@ -671,6 +671,7 @@ class FW_CRM_Admin_Page {
 			'body'     => isset( $_POST['body'] ) ? wp_kses_post( wp_unslash( $_POST['body'] ) ) : '',
 			'audience' => $audience,
 			'max_per_hour' => isset( $_POST['max_per_hour'] ) ? max( 0, (int) $_POST['max_per_hour'] ) : 0,
+			'sender_id'    => isset( $_POST['sender_id'] ) ? sanitize_key( wp_unslash( $_POST['sender_id'] ) ) : '',
 		);
 
 		$mode = isset( $_POST['editor_mode'] ) ? sanitize_key( wp_unslash( $_POST['editor_mode'] ) ) : 'visual';
@@ -1690,6 +1691,17 @@ class FW_CRM_Admin_Page {
 						<button type="submit" name="fw_crm_action" value="schedule_campaign" class="button"><?php esc_html_e( 'Schedule', 'fw' ); ?></button>
 					</span>
 				</p>
+				<?php if ( class_exists( 'FW_CRM_Senders' ) && FW_CRM_Senders::profiles() ) : ?>
+					<p class="fw-crm-campaign-sender">
+						<label for="fw-crm-sender"><?php esc_html_e( 'From', 'fw' ); ?></label>
+						<select id="fw-crm-sender" name="sender_id">
+							<option value=""><?php esc_html_e( 'The default for campaigns', 'fw' ); ?></option>
+							<?php foreach ( FW_CRM_Senders::profiles() as $sp ) : ?>
+								<option value="<?php echo esc_attr( $sp['id'] ); ?>" <?php selected( $campaign ? (string) ( $campaign->sender_id ?? '' ) : '', $sp['id'] ); ?>><?php echo esc_html( FW_CRM_Senders::describe( $sp ) ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</p>
+				<?php endif; ?>
 				<p class="fw-crm-campaign-speed">
 					<label for="fw-crm-max-per-hour"><?php esc_html_e( 'Speed limit for this campaign', 'fw' ); ?></label>
 					<input type="number" id="fw-crm-max-per-hour" name="max_per_hour" min="0" step="10" value="<?php echo $campaign && (int) $campaign->max_per_hour ? (int) $campaign->max_per_hour : ''; ?>" placeholder="<?php echo esc_attr( number_format_i18n( FW_CRM_Sender::rate()['per_hour'] ) ); ?>" />

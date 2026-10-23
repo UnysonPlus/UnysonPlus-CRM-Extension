@@ -325,6 +325,12 @@ class FW_CRM_Segments {
 		}
 		$field = $fields[ $key ];
 
+		// A field added through the unysonplus_crm_segment_fields filter can bring its own SQL
+		// (the contact row is aliased `s`): callable( $op, $value ) : string.
+		if ( isset( $field['sql'] ) && is_callable( $field['sql'] ) ) {
+			return (string) call_user_func( $field['sql'], $op, $value );
+		}
+
 		if ( 0 === strpos( $key, 'field:' ) ) {
 			return self::compile_custom( substr( $key, 6 ), $field, $op, $value );
 		}

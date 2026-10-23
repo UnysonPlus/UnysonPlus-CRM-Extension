@@ -32,6 +32,12 @@ class FW_CRM_Email_Item_Button extends FW_CRM_Email_Item {
 						'value' => '',
 						'attr'  => array( 'placeholder' => 'https://' ),
 					),
+					'tag_on_click' => array(
+						'type'  => 'text',
+						'label' => __( 'Tag on click', 'fw' ),
+						'desc'  => __( 'Optional. Tags added to the contact who clicks, comma-separated, e.g. interested-in-pricing. Needs click tracking on.', 'fw' ),
+						'value' => '',
+					),
 				),
 			),
 			'group_style' => array(
@@ -103,6 +109,9 @@ class FW_CRM_Email_Item_Button extends FW_CRM_Email_Item {
 		$bg         = ! empty( $atts['bg_color'] ) ? $atts['bg_color'] : '#2271b1';
 		$fg         = ! empty( $atts['text_color'] ) ? $atts['text_color'] : '#ffffff';
 		$height     = 44;
+		if ( '' !== $url && ! empty( $atts['tag_on_click'] ) && class_exists( 'FW_CRM_Smart_Links' ) ) {
+			$url = FW_CRM_Smart_Links::with_tags( $url, (string) $atts['tag_on_click'] );
+		}
 		$href       = '' !== $url ? esc_url( $url ) : '#';
 		$safe_label = esc_html( $label );
 

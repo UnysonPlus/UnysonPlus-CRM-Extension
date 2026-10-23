@@ -94,7 +94,13 @@ class FW_CRM_Direct_Email {
 			add_filter( 'wp_mail_from_name', $set_name, 999 );
 		}
 		add_action( 'wp_mail_failed', $catch );
+		if ( class_exists( 'FW_CRM_Senders' ) ) {
+			FW_CRM_Senders::begin( 'transactional' ); // The writer's own name still wins: its filter runs later.
+		}
 		$sent = wp_mail( $mail['to'], $mail['subject'], $mail['html'], $mail['headers'] );
+		if ( class_exists( 'FW_CRM_Senders' ) ) {
+			FW_CRM_Senders::end();
+		}
 		remove_action( 'wp_mail_failed', $catch );
 		remove_filter( 'wp_mail_from_name', $set_name, 999 );
 

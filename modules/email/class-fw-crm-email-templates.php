@@ -70,6 +70,10 @@ class FW_CRM_Email_Templates {
 				'title'  => __( 'Welcome', 'fw' ),
 				'blocks' => self::welcome(),
 			),
+			'followup'     => array(
+				'title'  => __( 'Follow-up', 'fw' ),
+				'blocks' => self::follow_up(),
+			),
 			'event'        => array(
 				'title'  => __( 'Event invitation', 'fw' ),
 				'blocks' => self::event(),
@@ -195,6 +199,22 @@ class FW_CRM_Email_Templates {
 					),
 				),
 			),
+			self::footer(),
+		);
+	}
+
+	/**
+	 * After a meeting, a demo or an enquiry: a short personal note, what was agreed, one next step.
+	 */
+	private static function follow_up() {
+		return array(
+			self::logo(),
+			self::text( __( '<p>Hi {{first_name}},</p><p>Thanks again for your time. As promised, here is a short summary of what we talked about.</p>', 'fw' ) ),
+			self::heading( __( 'What we agreed', 'fw' ), 'h3' ),
+			self::text( __( '<ul><li>The first point</li><li>The second point</li><li>What happens next, and when</li></ul>', 'fw' ) ),
+			self::text( __( '<p>The next step is yours whenever you are ready:</p>', 'fw' ) ),
+			self::button( __( 'Book a time', 'fw' ) ),
+			self::text( __( '<p>Any questions, just reply to this email.</p>', 'fw' ) ),
 			self::footer(),
 		);
 	}

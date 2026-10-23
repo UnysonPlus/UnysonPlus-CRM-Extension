@@ -365,12 +365,24 @@ class FW_CRM_Sender {
 			$mail['headers'][] = 'Message-ID: <' . FW_CRM_Tracking::message_id( (int) $row->id ) . '>';
 			FW_CRM_Tracking::sending( null );
 		}
-		$ok = wp_mail(
-			$mail['to'],
-			$mail['subject'],
-			$html,
-			$mail['headers']
-		);
+		if ( class_exists( 'FW_CRM_Smart_Links' ) ) {
+			$html = FW_CRM_Smart_Links::strip( $html ); // Tag markers that tracking did not turn into tracked links.
+		}
+		if ( class_exists( 'FW_CRM_Senders' ) ) {
+			FW_CRM_Senders::begin( 'marketing', (string) ( $campaign->sender_id ?? '' ) );
+		}
+		try {
+			$ok = wp_mail(
+				$mail['to'],
+				$mail['subject'],
+				$html,
+				$mail['headers']
+			);
+		} finally {
+			if ( class_exists( 'FW_CRM_Senders' ) ) {
+				FW_CRM_Senders::end();
+			}
+		}
 
 		return $ok ? true : new WP_Error( 'fw_crm_send_failed', __( 'wp_mail() refused the message.', 'fw' ) );
 	}

@@ -129,7 +129,17 @@ class FW_CRM_Mail {
 			return false;
 		}
 
-		return (bool) wp_mail( $mail['to'], $mail['subject'], $mail['body'], $mail['headers'] );
+		// Confirmations and welcomes are transactional: they use that sender profile.
+		if ( class_exists( 'FW_CRM_Senders' ) ) {
+			FW_CRM_Senders::begin( 'transactional' );
+		}
+		try {
+			return (bool) wp_mail( $mail['to'], $mail['subject'], $mail['body'], $mail['headers'] );
+		} finally {
+			if ( class_exists( 'FW_CRM_Senders' ) ) {
+				FW_CRM_Senders::end();
+			}
+		}
 	}
 
 	/**
