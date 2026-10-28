@@ -249,6 +249,20 @@ class FW_Extension_CRM extends FW_Extension {
 			new FW_CRM_REST_Deals();
 		}
 
+		// A workspace: a role can open to the CRM instead of the WordPress dashboard (core 3.0.55+).
+		add_action( 'fw_workspaces_register', function () {
+			fw_register_workspace( 'crm', array(
+				'label'       => __( 'CRM', 'fw' ),
+				'icon'        => 'dashicons-id-alt',
+				'page'        => 'fw-crm',
+				'capability'  => FW_CRM_Service::capability(),
+				'description' => __( 'Contacts, deals, tasks and campaigns. Good for the CRM Manager and Sales Rep roles.', 'fw' ),
+				// The one-click set-up (Admin Menu → Roles): the CRM's own roles open to it.
+				'roles'       => array( 'fw_crm_manager', 'fw_crm_sales_rep' ),
+				'setup'       => __( 'Run the site as a CRM', 'fw' ),
+			) );
+		} );
+
 		if ( is_admin() ) {
 			require_once $dir . 'class-fw-crm-list-table.php';
 			require_once $dir . 'class-fw-crm-admin-page.php';
