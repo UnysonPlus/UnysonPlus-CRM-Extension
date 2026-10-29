@@ -56,37 +56,19 @@ class FW_CRM_Admin_Page {
 			return;
 		}
 
-		// People who use the CRM but cannot reach the Unyson+ menu (CRM managers and
-		// sales reps are not site administrators) get the CRM as a menu of its own.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			$this->hook_suffix = add_menu_page(
-				__( 'CRM', 'fw' ),
-				__( 'CRM', 'fw' ),
-				FW_CRM_Service::capability(),
-				self::PAGE_SLUG,
-				array( $this, 'render_page' ),
-				'dashicons-id-alt',
-				3
-			);
-			if ( $this->hook_suffix ) {
-				FW_CRM_App::init( $this->hook_suffix );
-				add_action( 'load-' . $this->hook_suffix, array( $this, '_action_load' ) );
-				add_action( 'admin_enqueue_scripts', array( $this, '_action_enqueue' ) );
-			}
-			return;
-		}
-
-		$this->hook_suffix = add_submenu_page(
-			self::PARENT_SLUG,
-			__( 'CRM', 'fw' ), // page title
-			// The screen outgrew "Subscribers" — it is the whole newsletter surface
-			// now (campaigns, lists, tags, segments, import/export, settings), and
-			// the subscriber list is one tab within it. The TAB is still called
-			// Subscribers, which is where that word belongs.
-			__( 'CRM', 'fw' ),                  // menu label (short — the submenu is narrow)
+		// The CRM is a business app with its own operator roles (CRM managers, sales
+		// reps), so it sits at the TOP LEVEL for everyone rather than inside the Unyson+
+		// (developer / site-config) menu. It is a destination you work in daily, not a
+		// tool you configure, so it leads beside the other apps (Membership, Forms,
+		// Visitor Insights, SEO). Previously admins saw it as a Unyson+ submenu.
+		$this->hook_suffix = add_menu_page(
+			__( 'CRM', 'fw' ),
+			__( 'CRM', 'fw' ),
 			FW_CRM_Service::capability(),
 			self::PAGE_SLUG,
-			array( $this, 'render_page' )
+			array( $this, 'render_page' ),
+			'dashicons-id-alt',
+			26
 		);
 
 		if ( $this->hook_suffix ) {

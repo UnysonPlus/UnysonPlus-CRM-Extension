@@ -59,7 +59,8 @@ class FW_CRM_Trigger {
 		}
 		add_action( 'unysonplus_crm_deal_stage_changed', function ( $deal, $from, $to ) {
 			foreach ( (array) ( $deal['contact_ids'] ?? array() ) as $cid ) {
-				self::fire( 'crm.deal_stage_changed', (int) $cid, array( 'stage_id' => (string) $to, 'from_stage' => (string) $from, 'pipeline_id' => (string) ( $deal['pipeline_id'] ?? '' ), 'deal_id' => (int) $deal['id'] ) );
+				// The hook passes the stage rows (or ids from older callers); a row cast to a string is a fatal error.
+				self::fire( 'crm.deal_stage_changed', (int) $cid, array( 'stage_id' => (string) ( is_object( $to ) ? $to->id : $to ), 'from_stage' => (string) ( is_object( $from ) ? $from->id : $from ), 'pipeline_id' => (string) ( $deal['pipeline_id'] ?? '' ), 'deal_id' => (int) $deal['id'] ) );
 			}
 		}, 10, 3 );
 		foreach ( array( 'unysonplus_crm_deal_won' => 'crm.deal_won', 'unysonplus_crm_deal_lost' => 'crm.deal_lost', 'unysonplus_crm_deal_created' => 'crm.deal_created' ) as $hook => $slug ) {

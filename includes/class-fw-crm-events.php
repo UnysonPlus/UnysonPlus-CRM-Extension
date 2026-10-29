@@ -166,7 +166,11 @@ class FW_CRM_Events {
 			self::emit( 'deal.created', (int) ( $d['contact_id'] ?? 0 ), 'deal', (int) $d['id'], array( 'title' => $d['title'], 'value' => (float) $d['value'], 'stage_id' => (int) $d['stage_id'] ) );
 		} );
 		add_action( 'unysonplus_crm_deal_stage_changed', function ( $d, $from, $to ) {
-			self::emit( 'deal.stage_changed', (int) ( $d['contact_id'] ?? 0 ), 'deal', (int) $d['id'], array( 'from' => (int) $from, 'to' => (int) $to ) );
+			// The hook passes the stage rows (or ids from older callers).
+			$id = function ( $s ) {
+				return (int) ( is_object( $s ) ? $s->id : $s );
+			};
+			self::emit( 'deal.stage_changed', (int) ( $d['contact_id'] ?? 0 ), 'deal', (int) $d['id'], array( 'from' => $id( $from ), 'to' => $id( $to ) ) );
 		}, 10, 3 );
 		add_action( 'unysonplus_crm_deal_won', function ( $d ) {
 			self::emit( 'deal.won', (int) ( $d['contact_id'] ?? 0 ), 'deal', (int) $d['id'], array( 'value' => (float) $d['value'] ) );
