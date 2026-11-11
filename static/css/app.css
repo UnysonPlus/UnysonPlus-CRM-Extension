@@ -114,6 +114,11 @@ body.fw-app-crm {
 	height: 16px;
 }
 
+/* WordPress gives button icons a 1.9 line-height, which drops the glyph below the text. */
+.wp-core-ui .fw-crm-new > summary .dashicons {
+	line-height: 16px;
+}
+
 .fw-crm-new__menu {
 	position: absolute;
 	top: calc(100% + 6px);

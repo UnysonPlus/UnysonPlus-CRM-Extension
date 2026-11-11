@@ -295,6 +295,8 @@ class FW_Extension_CRM extends FW_Extension {
 				require_once $dir . 'admin/class-fw-crm-admin-inbound.php';
 				FW_CRM_Admin_Inbound::init();
 			}
+			require_once $dir . 'admin/class-fw-crm-admin-mode.php';
+			FW_CRM_Admin_Mode::init();
 			require_once $dir . 'admin/class-fw-crm-admin-fields.php';
 			FW_CRM_Admin_Fields::init();
 			require_once $dir . 'admin/class-fw-crm-admin-modules.php';
