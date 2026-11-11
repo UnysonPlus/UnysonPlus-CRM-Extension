@@ -510,6 +510,63 @@ class FW_CRM_Admin_Contacts {
 	}
 
 	/**
+	 * A custom field as a details pair: a web address becomes a short link.
+	 *
+	 * @param array $def
+	 * @param mixed $v
+	 *
+	 * @return array [ text, url? ]
+	 */
+	private static function field_pair( array $def, $v ) {
+		$text = self::field_display( $def, $v );
+		if ( 'url' === $def['type'] && '' !== $text ) {
+			return array( self::link_label( $text ), $text );
+		}
+		if ( 'email' === $def['type'] && '' !== $text ) {
+			return array( $text, 'mailto:' . $text );
+		}
+		return array( $text );
+	}
+
+	/**
+	 * A readable label for a web address: the site and a short path, never a long tracking string.
+	 *
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	private static function link_label( $url ) {
+		$host = (string) wp_parse_url( $url, PHP_URL_HOST );
+		if ( '' === $host ) {
+			return $url;
+		}
+		$host = preg_replace( '/^www\./', '', $host );
+		if ( preg_match( '/(^|\.)google\.[a-z.]+$/', $host ) && false !== strpos( $url, '/maps' ) ) {
+			return __( 'Open in Google Maps', 'fw' );
+		}
+		$path = trim( (string) wp_parse_url( $url, PHP_URL_PATH ), '/' );
+		$label = '' !== $path ? $host . '/' . $path : $host;
+		return strlen( $label ) > 40 ? substr( $label, 0, 38 ) . '…' : $label;
+	}
+
+	/**
+	 * A small map of an address (Google's keyless embed), loaded only when it scrolls into view.
+	 *
+	 * @param string $place Name and address.
+	 */
+	private static function render_map( $place ) {
+		if ( '' === trim( $place ) || ! apply_filters( 'fw_crm_show_maps', true ) ) {
+			return;
+		}
+		// The embed carries its own "Open in Maps" button, so no extra link is needed.
+		printf(
+			'<div class="fw-crm-map"><iframe src="%1$s" title="%2$s" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>',
+			esc_url( 'https://www.google.com/maps?output=embed&q=' . rawurlencode( $place ) ),
+			esc_attr( sprintf( __( 'Map of %s', 'fw' ), $place ) )
+		);
+	}
+
+	/**
 	 * A definition list of label → value, skipping empty values.
 	 *
 	 * @param array $pairs label => [ text, url? ]
@@ -524,7 +581,14 @@ class FW_CRM_Admin_Contacts {
 			++$shown;
 			echo '<dt>' . esc_html( $label ) . '</dt><dd>';
 			if ( ! empty( $pair[1] ) ) {
-				printf( '<a href="%s">%s</a>', esc_url( $pair[1] ), esc_html( $pair[0] ) );
+				// Web addresses open in a new tab so the record stays open; mailto/admin links do not.
+				$external = preg_match( '#^https?://#i', (string) $pair[1] ) && 0 !== strpos( (string) $pair[1], admin_url() );
+				printf(
+					'<a href="%s"%s>%s</a>',
+					esc_url( $pair[1] ),
+					$external ? ' target="_blank" rel="noopener"' : '',
+					esc_html( $external && $pair[0] === $pair[1] ? self::link_label( $pair[1] ) : $pair[0] )
+				);
 			} else {
 				echo esc_html( $pair[0] );
 			}
@@ -761,7 +825,7 @@ class FW_CRM_Admin_Contacts {
 								$pairs[ __( 'Site account', 'fw' ) ] = array( $u->user_login, get_edit_user_link( $u->ID ) );
 							}
 							foreach ( $defs as $def ) {
-								$pairs[ $def['label'] ] = array( self::field_display( $def, $c['fields'][ $def['key'] ] ?? '' ) );
+								$pairs[ $def['label'] ] = self::field_pair( $def, $c['fields'][ $def['key'] ] ?? '' );
 							}
 							self::render_details( $pairs );
 							?>
@@ -1412,9 +1476,10 @@ class FW_CRM_Admin_Contacts {
 								__( 'Added', 'fw' )    => array( date_i18n( get_option( 'date_format' ), strtotime( $co->created_at ) ) ),
 							);
 							foreach ( FW_CRM_Fields::definitions( 'company' ) as $def ) {
-								$pairs[ $def['label'] ] = array( self::field_display( $def, $values[ $def['key'] ] ?? '' ) );
+								$pairs[ $def['label'] ] = self::field_pair( $def, $values[ $def['key'] ] ?? '' );
 							}
 							self::render_details( $pairs );
+							self::render_map( '' !== $address ? $co->name . ', ' . $address : '' );
 							?>
 						</div>
 						<?php self::render_company_form( $co, false ); ?>

@@ -114,9 +114,43 @@ body.fw-app-crm {
 	height: 16px;
 }
 
-/* WordPress gives button icons a 1.9 line-height, which drops the glyph below the text. */
+/* WordPress gives button icons a 1.9 line-height, which drops the glyph below
+ * the text. A <summary> is not a `.button`, so core's own
+ * `.wp-core-ui .button .dashicons` rules never reach it -- this is the whole
+ * fix here, and it is NOT the same problem the `.button` icons have (below). */
 .wp-core-ui .fw-crm-new > summary .dashicons {
 	line-height: 16px;
+}
+
+/* --- Icons inside a real `.button` --------------------------------------- *
+ *
+ * A dashicon in a `.button` needs a ~3px downward nudge to sit on the text's
+ * optical centre. Measured on the record actions: `vertical-align: -3px` puts
+ * the icon's centre exactly on the button's centre, and core's own
+ * `vertical-align: middle` leaves it 1.75px low.
+ *
+ * THE TRAP: core ships `.wp-core-ui .button .dashicons { vertical-align:
+ * middle }`, which is specificity (0,3,0) -- the SAME weight as a plain
+ * `.fw-crm-thing .button .dashicons`. A tie is broken by source order, and
+ * core's stylesheet loads after this one, so a nudge written at that weight
+ * silently loses and the icon sits low anyway. That is exactly what happened:
+ * the `-3px` below was correct all along and simply never applied.
+ *
+ * So these selectors carry a `.wp-core-ui` prefix purely to reach (0,4,0) and
+ * win the tie. Keep every icon-in-a-button selector in this one rule, and keep
+ * the prefix -- dropping it does not change what the rule says, only whether
+ * it does anything.
+ *
+ * When the Admin Skin is active it makes `.button` a flex container, where
+ * `vertical-align` is ignored and `align-items: center` does the centring.
+ * Both paths measure 0, so this rule is correct skinned or unskinned. */
+.wp-core-ui .fw-crm-cal-bar__nav .button .dashicons,
+.wp-core-ui .fw-crm-record__actions .button .dashicons,
+.wp-core-ui .fw-crm-home-tools .button .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: -3px;
 }
 
 .fw-crm-new__menu {
@@ -812,6 +846,20 @@ body.fw-app-crm {
 
 .fw-crm-details a {
 	text-decoration: none;
+}
+
+/* A company's map, under its details. */
+.fw-crm-map {
+	margin-top: 16px;
+}
+
+.fw-crm-map iframe {
+	display: block;
+	width: 100%;
+	height: 200px;
+	border: 0;
+	border-radius: 8px;
+	background: var(--crm-soft, #f3f4f6);
 }
 
 /* Forms */
@@ -1876,12 +1924,6 @@ body.fw-app-crm {
 	min-height: 32px;
 }
 
-.fw-crm-cal-bar__nav .button .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-}
-
 body.fw-app-crm .fw-crm-cal-bar__title {
 	margin: 0 0 0 8px;
 	font-size: 18px;
@@ -2600,13 +2642,6 @@ body.fw-app-crm .fw-crm-file__text a:focus-visible {
 
 /* --- One-to-one email ---------------------------------------------------- */
 
-.fw-crm-record__actions .button .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-	vertical-align: -3px;
-}
-
 .fw-crm-compose {
 	width: min(620px, calc(100vw - 32px));
 }
@@ -2770,13 +2805,6 @@ body.fw-app-crm .fw-crm-file__text a:focus-visible {
 	display: flex;
 	justify-content: flex-end;
 	margin: -4px 0 12px;
-}
-
-.fw-crm-home-tools .button .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-	vertical-align: -3px;
 }
 
 .fw-crm-home-tools .button[aria-pressed="true"] {
