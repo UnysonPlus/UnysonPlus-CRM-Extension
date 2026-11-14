@@ -89,8 +89,10 @@ class FW_CRM_App {
 				'label' => '',
 				'items' => array(
 					'home'        => array( 'label' => __( 'Home', 'fw' ), 'icon' => 'dashicons-admin-home' ),
-					'subscribers' => array( 'label' => __( 'Contacts', 'fw' ), 'icon' => 'dashicons-groups' ),
+					// Companies before Contacts: most records are businesses, and a company holds the website,
+					// socials and map that its contacts point to.
 					'companies'   => array( 'label' => __( 'Companies', 'fw' ), 'icon' => 'dashicons-building', 'module' => 'companies' ),
+					'subscribers' => array( 'label' => __( 'Contacts', 'fw' ), 'icon' => 'dashicons-groups' ),
 					'deals'       => array( 'label' => __( 'Deals', 'fw' ), 'icon' => 'dashicons-money-alt', 'module' => 'pipeline' ),
 					'cases'       => array( 'label' => __( 'Cases', 'fw' ), 'icon' => 'dashicons-sos', 'module' => 'cases' ),
 					'tasks'       => array( 'label' => __( 'Tasks', 'fw' ), 'icon' => 'dashicons-yes-alt' ),
@@ -268,10 +270,10 @@ class FW_CRM_App {
 				<?php esc_html_e( 'New', 'fw' ); ?>
 			</summary>
 			<ul class="fw-crm-new__menu">
-				<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'subscribers', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><?php esc_html_e( 'Contact', 'fw' ); ?></a></li>
 				<?php if ( FW_CRM_Modules::enabled( 'companies' ) ) : ?>
 					<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'companies', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-building" aria-hidden="true"></span><?php esc_html_e( 'Company', 'fw' ); ?></a></li>
 				<?php endif; ?>
+				<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'subscribers', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><?php esc_html_e( 'Contact', 'fw' ); ?></a></li>
 				<?php if ( class_exists( 'FW_CRM_Deals' ) ) : ?>
 					<li><a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'deals', 'new' => 1 ), $base ) ); ?>"><span class="dashicons dashicons-money-alt" aria-hidden="true"></span><?php esc_html_e( 'Deal', 'fw' ); ?></a></li>
 				<?php endif; ?>
@@ -308,7 +310,16 @@ class FW_CRM_App {
 	 *
 	 * @return string
 	 */
-	public static function avatar( $name, $size = 32, $shape = 'round' ) {
+	public static function avatar( $name, $size = 32, $shape = 'round', $image = '' ) {
+		if ( '' !== (string) $image ) {
+			// A picture (a company's logo): on a plain tile, so any logo shape and colour sits well.
+			return sprintf(
+				'<span class="fw-crm-avatar fw-crm-avatar--%s fw-crm-avatar--image" style="--s:%dpx" aria-hidden="true"><img src="%s" alt="" loading="lazy" decoding="async" /></span>',
+				'square' === $shape ? 'square' : 'round',
+				(int) $size,
+				esc_url( $image )
+			);
+		}
 		$name  = trim( (string) $name );
 		$parts = preg_split( '/[\s@._-]+/', $name, -1, PREG_SPLIT_NO_EMPTY );
 		$ini   = '';
@@ -325,6 +336,19 @@ class FW_CRM_App {
 			(int) $hue,
 			esc_html( $ini )
 		);
+	}
+
+	/**
+	 * A company's square badge: its logo when it has one, else its initials.
+	 *
+	 * @param object $company A companies row.
+	 * @param int    $size    px
+	 *
+	 * @return string
+	 */
+	public static function company_avatar( $company, $size = 32 ) {
+		$logo = class_exists( 'FW_CRM_Company_Logos' ) ? FW_CRM_Company_Logos::url( $company ) : '';
+		return self::avatar( $company ? (string) $company->name : '', $size, 'square', $logo );
 	}
 
 	/**

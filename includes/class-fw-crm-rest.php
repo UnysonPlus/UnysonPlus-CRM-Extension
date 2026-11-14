@@ -475,7 +475,7 @@ class FW_CRM_REST {
 	 * @return array
 	 */
 	private function company( $row ) {
-		$keys = array( 'name', 'domain', 'website', 'phone', 'email', 'industry', 'size', 'address_line1', 'address_line2', 'city', 'region', 'postcode', 'country', 'last_activity_at', 'created_at', 'updated_at', 'deleted_at' );
+		$keys = array( 'name', 'domain', 'website', 'logo', 'phone', 'email', 'industry', 'size', 'address_line1', 'address_line2', 'city', 'region', 'postcode', 'country', 'last_activity_at', 'created_at', 'updated_at', 'deleted_at' );
 		$out  = array( 'id' => (int) $row->id );
 		foreach ( $keys as $k ) {
 			$out[ $k ] = $row->$k;

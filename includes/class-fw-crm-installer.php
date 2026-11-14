@@ -26,7 +26,7 @@
 class FW_CRM_Installer {
 
 	/** Bump when the schema below changes. */
-	const DB_VERSION = '2.15.0';
+	const DB_VERSION = '2.16.0';
 
 	const DB_VERSION_OPTION = 'fw_ext_crm_db_version';
 
@@ -297,6 +297,7 @@ class FW_CRM_Installer {
 	name varchar(190) NOT NULL default '',
 	domain varchar(190) NOT NULL default '',
 	website varchar(255) NOT NULL default '',
+	logo varchar(255) NOT NULL default '',
 	phone varchar(50) NOT NULL default '',
 	email varchar(190) NOT NULL default '',
 	industry varchar(100) NOT NULL default '',

@@ -237,7 +237,7 @@ class FW_CRM_Webhooks {
 	private static function company( $co ) {
 		$co  = (object) $co;
 		$out = array( 'id' => (int) ( $co->id ?? 0 ) );
-		foreach ( array( 'name', 'domain', 'website', 'phone', 'email', 'industry', 'size', 'city', 'region', 'country', 'created_at' ) as $k ) {
+		foreach ( array( 'name', 'domain', 'website', 'logo', 'phone', 'email', 'industry', 'size', 'city', 'region', 'country', 'created_at' ) as $k ) {
 			$out[ $k ] = isset( $co->$k ) ? (string) $co->$k : '';
 		}
 		$out['owner_id'] = (int) ( $co->owner_id ?? 0 );

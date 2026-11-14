@@ -310,6 +310,54 @@ body.fw-app-crm {
 	border-radius: 24%;
 }
 
+/* A company logo: on a plain white tile with a hairline, inset a little, so a
+ * transparent, dark or oddly shaped logo always reads and lines up with the
+ * initials badges around it. */
+.fw-crm-avatar--image {
+	overflow: hidden;
+	background: #fff;
+	box-shadow: inset 0 0 0 1px var(--crm-border);
+}
+
+.fw-crm-avatar--image img {
+	width: 84%;
+	height: 84%;
+	object-fit: contain;
+}
+
+.fw-crm-logo-menu__body {
+	width: 260px;
+	padding: 12px;
+}
+
+.fw-crm-logo-menu__body form {
+	display: grid;
+	gap: 6px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--crm-border);
+}
+
+.fw-crm-logo-menu__body label {
+	font-weight: 600;
+}
+
+.fw-crm-logo-menu__body input[type="file"] {
+	max-width: 100%;
+}
+
+.fw-crm-logo-menu__body p {
+	margin: 0;
+	font-size: 12px;
+}
+
+.fw-crm-logo-menu__body .button-primary {
+	justify-self: start;
+}
+
+.fw-crm-logo-menu__body ul {
+	margin: 8px 0 0;
+}
+
 .fw-crm-stage {
 	--c: var(--st-inactive);
 	display: inline-flex;

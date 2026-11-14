@@ -132,6 +132,7 @@ class FW_CRM_Admin_Sending {
 		<section class="fw-crm-panel fw-crm-sending" id="fw-crm-sending" aria-labelledby="fw-crm-h-sending">
 			<header class="fw-crm-panel__head"><h2 id="fw-crm-h-sending"><?php esc_html_e( 'Sending', 'fw' ); ?></h2></header>
 			<p class="description"><?php esc_html_e( 'Who CRM emails come from, and how they are sent. Marketing email (campaigns, digests) and transactional email (confirmations, one-to-one email, case replies) each have a default sender, so they can use different addresses or services.', 'fw' ); ?></p>
+			<?php self::render_site_mail(); ?>
 
 			<h3><?php esc_html_e( 'Senders', 'fw' ); ?></h3>
 			<?php if ( $s['profiles'] ) : ?>
@@ -294,6 +295,30 @@ class FW_CRM_Admin_Sending {
 			.fw-crm-service__hook input { flex: 1 1 320px; font-family: monospace; font-size: 12px; }
 			.fw-crm-form__row small { display: block; margin-top: .25em; }
 		</style>
+		<?php
+	}
+
+	/** How "the site's own mail" currently sends, with a way to the Mailer settings (a hidden extension). */
+	private static function render_site_mail() {
+		$mailer = function_exists( 'fw_ext' ) ? fw_ext( 'mailer' ) : null;
+		if ( ! $mailer ) {
+			echo '<p class="description">' . esc_html__( 'The site\'s own mail is your web host\'s mail, or an SMTP plugin if one is active.', 'fw' ) . '</p>';
+			return;
+		}
+		$host = 'smtp' === (string) $mailer->get_db_settings_option( 'method' ) && $mailer->is_configured()
+			? (string) $mailer->get_db_settings_option( 'smtp/host' )
+			: '';
+		$url  = admin_url( 'admin.php?page=fw-extensions&sub-page=extension&extension=mailer' );
+		?>
+		<p class="description">
+			<?php
+			echo esc_html( '' !== $host
+				/* translators: %s: an SMTP server */
+				? sprintf( __( 'The site\'s own mail goes through the SMTP server %s.', 'fw' ), $host )
+				: __( 'The site\'s own mail goes through your web host, which often lands in spam. Set up SMTP or an email service below.', 'fw' ) );
+			?>
+			<a href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Mailer settings (SMTP)', 'fw' ); ?></a>
+		</p>
 		<?php
 	}
 

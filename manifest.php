@@ -14,7 +14,18 @@ $manifest['description'] = __(
 /**
  * Changelog ----------------------------------------------------------------
  *
- * 1.0.68 - Forms add the sender to the CRM (FW_CRM_Form_Map). A contact form's "Add to the CRM"
+ * 1.0.87 - Company logos. A company shows its logo instead of its initials, in the
+ *         Companies list, on its page, on its people's pages and in search
+ *         (FW_CRM_App::company_avatar). The logo comes from the company's OWN website
+ *         (its apple-touch-icon, else its largest favicon; never a third-party logo
+ *         service, which would receive the whole company list), fetched in the
+ *         background a few companies per WP-Cron run, or uploaded on the company page
+ *         (Logo menu: upload, get it from their website, remove). Files live in
+ *         uploads/unysonplus/crm-logos/; schema 2.16.0 adds companies.logo, included in
+ *         REST and webhook payloads. "Get missing logos" on the Companies list fetches
+ *         them for companies added before.
+ *
+ * 1.0.68 -Forms add the sender to the CRM (FW_CRM_Form_Map). A contact form's "Add to the CRM"
  *         settings gain "Add the sender to the CRM": every submission with an email address
  *         creates or updates the contact (status "none", so nobody is subscribed without
  *         consent). A "Save the answers" table in the Settings tab lists the form's fields and
@@ -701,7 +712,7 @@ $manifest['description'] = __(
  *         import/export, provider interface, lifecycle hooks, REST and GDPR.
  */
 
-$manifest['version']    = '1.0.85';
+$manifest['version']    = '1.0.88';
 $manifest['display']    = true;
 $manifest['standalone'] = true;
 $manifest['thumbnail']  = 'thumbnail.svg';

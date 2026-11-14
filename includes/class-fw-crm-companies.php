@@ -147,6 +147,10 @@ class FW_CRM_Companies {
 		if ( isset( $data['email'] ) ) {
 			$row['email'] = sanitize_email( (string) $data['email'] );
 		}
+		if ( isset( $data['logo'] ) ) {
+			// A picture URL, '' (none yet) or 'none' (removed on purpose; see FW_CRM_Company_Logos).
+			$row['logo'] = 'none' === $data['logo'] ? 'none' : esc_url_raw( (string) $data['logo'], array( 'http', 'https' ) );
+		}
 		if ( isset( $data['domain'] ) || isset( $data['website'] ) ) {
 			$row['domain'] = self::normalize_domain( isset( $data['domain'] ) && '' !== $data['domain'] ? $data['domain'] : ( $data['website'] ?? '' ) );
 		}

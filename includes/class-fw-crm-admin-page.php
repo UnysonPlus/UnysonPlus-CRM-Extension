@@ -262,7 +262,7 @@ class FW_CRM_Admin_Page {
 		}
 
 		$record = isset( $_REQUEST['id'] ) ? (int) $_REQUEST['id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification
-		$on_company = in_array( $action, array( 'save_company', 'trash_company', 'restore_company', 'link_contact', 'purge_company' ), true )
+		$on_company = in_array( $action, array( 'save_company', 'trash_company', 'restore_company', 'link_contact', 'purge_company', 'company_logo_upload', 'company_logo_fetch', 'company_logo_remove' ), true )
 			|| ( 'add_note' === $action && isset( $_POST['object'] ) && 'company' === $_POST['object'] ); // phpcs:ignore WordPress.Security.NonceVerification
 		$on_deal    = 'add_note' === $action && isset( $_POST['object'] ) && 'deal' === $_POST['object']; // phpcs:ignore WordPress.Security.NonceVerification
 		if ( $record && ! FW_CRM_Capabilities::sees_all() && 0 !== strpos( $action, 'task_' ) && 0 !== strpos( $action, 'deal_' ) && 0 !== strpos( $action, 'pipeline_' ) ) {

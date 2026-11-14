@@ -40,6 +40,7 @@ class FW_Extension_CRM extends FW_Extension {
 		require_once $dir . 'class-fw-crm-consent.php';
 		require_once $dir . 'class-fw-crm-fields.php';
 		require_once $dir . 'class-fw-crm-companies.php';
+		require_once $dir . 'class-fw-crm-company-logos.php';
 		require_once $dir . 'class-fw-crm-contacts.php';
 		require_once $dir . 'class-fw-crm-trash.php';
 		require_once $dir . 'class-fw-crm-segments.php';
@@ -81,6 +82,7 @@ class FW_Extension_CRM extends FW_Extension {
 		FW_CRM_Activity::init();
 		FW_CRM_Consent::init();
 		FW_CRM_Trash::init();
+		FW_CRM_Company_Logos::init();
 		FW_CRM_Tags::init();
 		FW_CRM_Import::init();
 		FW_CRM_Tasks::init();

@@ -124,6 +124,31 @@ class FW_CRM_Admin_Contacts {
 				FW_CRM_Admin_Page::flash( is_wp_error( $result ) ? 'error' : 'success', is_wp_error( $result ) ? $result->get_error_message() : __( 'Company saved.', 'fw' ) );
 				return array( 'tab' => 'companies', 'company' => $id );
 
+			case 'company_logo_upload':
+				$result = isset( $_FILES['logo'] ) && is_array( $_FILES['logo'] ) ? FW_CRM_Company_Logos::upload( $id, $_FILES['logo'] ) : new WP_Error( 'fw_crm_logo_upload', __( 'Choose a picture to upload.', 'fw' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- checked as an image by upload().
+				FW_CRM_Admin_Page::flash( is_wp_error( $result ) ? 'error' : 'success', is_wp_error( $result ) ? $result->get_error_message() : __( 'Logo saved.', 'fw' ) );
+				return array( 'tab' => 'companies', 'company' => $id );
+
+			case 'company_logo_fetch':
+				$result = FW_CRM_Company_Logos::fetch( $id );
+				FW_CRM_Admin_Page::flash( is_wp_error( $result ) ? 'error' : 'success', is_wp_error( $result ) ? $result->get_error_message() : __( 'Logo taken from their website.', 'fw' ) );
+				return array( 'tab' => 'companies', 'company' => $id );
+
+			case 'company_logo_remove':
+				FW_CRM_Company_Logos::remove( $id );
+				FW_CRM_Admin_Page::flash( 'success', __( 'Logo removed. It will not be fetched again unless you ask for it.', 'fw' ) );
+				return array( 'tab' => 'companies', 'company' => $id );
+
+			case 'company_logos_missing':
+				if ( ! FW_CRM_Capabilities::can_manage() ) {
+					return array( 'tab' => 'companies' );
+				}
+				$n = FW_CRM_Company_Logos::queue_missing();
+				FW_CRM_Admin_Page::flash( 'success', $n
+					? sprintf( _n( 'Getting %s logo from its website in the background. Logos appear as they arrive.', 'Getting %s logos from their websites in the background. Logos appear as they arrive.', $n, 'fw' ), number_format_i18n( $n ) )
+					: __( 'Every company with a website already has a logo, or none was found.', 'fw' ) );
+				return array( 'tab' => 'companies' );
+
 			case 'trash_company':
 				FW_CRM_Companies::trash( $id );
 				FW_CRM_Admin_Page::flash( 'success', sprintf(
@@ -887,7 +912,7 @@ class FW_CRM_Admin_Contacts {
 								<?php foreach ( $companies as $co ) : ?>
 									<li>
 										<a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'companies', 'company' => (int) $co->id ), $base ) ); ?>">
-											<?php echo FW_CRM_App::avatar( $co->name, 28, 'square' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+											<?php echo FW_CRM_App::company_avatar( $co, 28 ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 											<span class="fw-crm-people__text">
 												<span class="fw-crm-people__name"><?php echo esc_html( $co->name ); ?></span>
 												<span class="fw-crm-people__sub"><?php echo (int) $co->id === (int) $c['company_id'] ? esc_html__( 'Main company', 'fw' ) : esc_html( (string) $co->domain ); ?></span>
@@ -1304,6 +1329,12 @@ class FW_CRM_Admin_Contacts {
 				<input type="search" id="fw-crm-co-s" name="s" value="<?php echo esc_attr( $search ); ?>" placeholder="<?php esc_attr_e( 'Name, domain or email', 'fw' ); ?>" />
 				<button type="submit" class="button"><?php esc_html_e( 'Search', 'fw' ); ?></button>
 			</form>
+			<?php $logo_queue = FW_CRM_Company_Logos::pending(); ?>
+			<?php if ( $logo_queue ) : ?>
+				<span class="fw-crm-muted"><?php echo esc_html( sprintf( _n( 'Getting %s logo in the background…', 'Getting %s logos in the background…', $logo_queue, 'fw' ), number_format_i18n( $logo_queue ) ) ); ?></span>
+			<?php else : ?>
+				<a class="button" href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'fw_crm_action', 'company_logos_missing', $base ), FW_CRM_Admin_Page::NONCE ) ); ?>" title="<?php esc_attr_e( 'Look on each company\'s own website for its logo, for every company that has a website and no logo yet.', 'fw' ); ?>"><span class="dashicons dashicons-format-image" aria-hidden="true"></span> <?php esc_html_e( 'Get missing logos', 'fw' ); ?></a>
+			<?php endif; ?>
 			<a class="button button-primary" href="<?php echo esc_url( add_query_arg( 'new', 1, $base ) ); ?>"><?php esc_html_e( 'New company', 'fw' ); ?></a>
 		</div>
 
@@ -1326,7 +1357,7 @@ class FW_CRM_Admin_Contacts {
 					<tr>
 						<td>
 							<div class="fw-crm-who">
-								<?php echo FW_CRM_App::avatar( $co->name, 32, 'square' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+								<?php echo FW_CRM_App::company_avatar( $co, 32 ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 								<div class="fw-crm-who__text">
 									<a class="fw-crm-who__name row-title" href="<?php echo esc_url( add_query_arg( 'company', (int) $co->id, $base ) ); ?>"><?php echo esc_html( $co->name ); ?></a>
 									<?php if ( '' !== (string) $co->domain ) : ?>
@@ -1435,7 +1466,7 @@ class FW_CRM_Admin_Contacts {
 		?>
 		<div class="fw-crm-record">
 			<section class="fw-crm-panel fw-crm-record__head">
-				<?php echo FW_CRM_App::avatar( $co->name, 56, 'square' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+				<?php echo FW_CRM_App::company_avatar( $co, 56 ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 				<div class="fw-crm-record__id">
 					<h2><?php echo esc_html( $co->name ); ?></h2>
 					<p class="fw-crm-record__sub"><?php echo esc_html( implode( ' · ', array_filter( array( (string) $co->industry, (string) $co->size ? sprintf( __( '%s people', 'fw' ), $co->size ) : '' ) ) ) ); ?></p>
@@ -1451,6 +1482,29 @@ class FW_CRM_Admin_Contacts {
 				</div>
 				<div class="fw-crm-record__actions">
 					<?php do_action( 'unysonplus_crm_record_actions', 'company', $co ); // phpcs:ignore WordPress.NamingConventions.ValidHookName -- documented above. ?>
+					<?php $has_logo = '' !== FW_CRM_Company_Logos::url( $co ); ?>
+					<details class="fw-crm-new fw-crm-logo-menu">
+						<summary class="button"><span class="dashicons dashicons-format-image" aria-hidden="true"></span><?php esc_html_e( 'Logo', 'fw' ); ?></summary>
+						<div class="fw-crm-new__menu fw-crm-logo-menu__body">
+							<form method="post" action="" enctype="multipart/form-data">
+								<?php wp_nonce_field( FW_CRM_Admin_Page::NONCE ); ?>
+								<input type="hidden" name="fw_crm_action" value="company_logo_upload" />
+								<input type="hidden" name="id" value="<?php echo (int) $id; ?>" />
+								<label for="fw-crm-logo-file"><?php echo $has_logo ? esc_html__( 'Upload a different logo', 'fw' ) : esc_html__( 'Upload a logo', 'fw' ); ?></label>
+								<input type="file" id="fw-crm-logo-file" name="logo" accept="image/png,image/jpeg,image/gif,image/webp" required />
+								<p class="fw-crm-muted"><?php esc_html_e( 'PNG, JPG, GIF or WebP, under 2 MB. A square picture looks best.', 'fw' ); ?></p>
+								<button type="submit" class="button button-primary"><?php esc_html_e( 'Upload', 'fw' ); ?></button>
+							</form>
+							<ul>
+								<?php if ( '' !== $site ) : ?>
+									<li><a href="<?php echo esc_url( self::action( 'company_logo_fetch', $id ) ); ?>"><span class="dashicons dashicons-update" aria-hidden="true"></span><?php esc_html_e( 'Get it from their website', 'fw' ); ?></a></li>
+								<?php endif; ?>
+								<?php if ( $has_logo ) : ?>
+									<li><a href="<?php echo esc_url( self::action( 'company_logo_remove', $id ) ); ?>"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span><?php esc_html_e( 'Remove the logo', 'fw' ); ?></a></li>
+								<?php endif; ?>
+							</ul>
+						</div>
+					</details>
 					<a class="button" href="<?php echo esc_url( add_query_arg( array( 'tab' => 'subscribers', 'new' => 1, 'company' => $id ), $base ) ); ?>"><?php esc_html_e( 'Add a person', 'fw' ); ?></a>
 					<button type="button" class="button" data-edit-toggle="fw-crm-about"><?php esc_html_e( 'Edit', 'fw' ); ?></button>
 				</div>
@@ -1608,7 +1662,7 @@ class FW_CRM_Admin_Contacts {
 						?>
 						<li>
 							<a href="<?php echo esc_url( $url ); ?>">
-								<?php echo FW_CRM_App::avatar( $name, 32, 'company' === $what ? 'square' : 'round' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+								<?php echo ( 'company' === $what ? FW_CRM_App::company_avatar( $r, 32 ) : FW_CRM_App::avatar( $name, 32 ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 								<span class="fw-crm-people__text">
 									<span class="fw-crm-people__name"><?php echo esc_html( $name ); ?></span>
 									<span class="fw-crm-people__sub"><?php echo esc_html( $sub ); ?></span>
@@ -1818,7 +1872,7 @@ class FW_CRM_Admin_Contacts {
 						<?php foreach ( $companies as $co ) : ?>
 							<li>
 								<a href="<?php echo esc_url( add_query_arg( array( 'tab' => 'companies', 'company' => (int) $co->id ), $base ) ); ?>">
-									<?php echo FW_CRM_App::avatar( $co->name, 32, 'square' ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+									<?php echo FW_CRM_App::company_avatar( $co, 32 ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
 									<span class="fw-crm-people__text">
 										<span class="fw-crm-people__name"><?php echo esc_html( $co->name ); ?></span>
 										<span class="fw-crm-people__sub"><?php echo esc_html( (string) $co->domain ); ?></span>
